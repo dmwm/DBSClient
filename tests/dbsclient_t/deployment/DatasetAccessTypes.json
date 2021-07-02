@@ -1,0 +1,11 @@
+[
+    {
+        "dataset_access_type": [
+            "DELETED", 
+            "DEPRECATED", 
+            "INVALID",
+            "VALID",
+            "PRODUCTION"
+        ]
+    }
+]

@@ -1,0 +1,18 @@
+{
+    "primary_ds_name": "DBS3DeploymentTestPrimary", 
+    "physics_group_name": "Top", 
+    "acquisition_era_name": "DBS3_DEPLOYMENT_TEST_ERA", 
+    "processing_version": "4711", 
+    "dataset": "/DBS3DeploymentTestPrimary/DBS3_DEPLOYMENT_TEST_ERA-DBS3_DEPLOYMENT_TEST_CHILD-v4711/RECO", 
+    "processed_ds_name": "DBS3_DEPLOYMENT_TEST_ERA-DBS3_DEPLOYMENT_TEST_CHILD-v4711", 
+    "xtcrosssection": 123,
+    "output_configs": [{"release_version": "CMSSW_1_2_3", 
+                        "pset_hash": "NO_PSET_HASH",
+                        "pset_name": "no_name",
+                        "app_name": "cmsRun", 
+                        "output_module_label": "DBS3_DEPLOYMENT_TEST", 
+                        "global_tag": "DBS3_DEPLOYMENT_TEST"}],
+    "primary_ds_type": "mc", 
+    "dataset_access_type": "DEPRECATED", 
+    "data_tier_name": "RECO"
+}
