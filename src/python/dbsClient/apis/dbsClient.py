@@ -332,10 +332,10 @@ class DbsApi(object):
         # eveything is good. Otherwise, we have to remove all even_count in lumis and raise exception.
         # when frst == False, weare looking for event_count != None in the data, if we did not find Not None (redFlg = False),        # everything is good. Otherwise, we have to remove all even_count in lumis and raise exception.     
         redFlag = False
-        if frst == True:
-            eventCT = (fl.get('event_count') == None for f in  blockDump['files'] for fl in f['file_lumi_list'])
+        if frst:
+            eventCT = (fl.get('event_count') is None for f in  blockDump['files'] for fl in f['file_lumi_list'])
         else:                 
-            eventCT = (fl.get('event_count') != None for f in  blockDump['files'] for fl in f['file_lumi_list'])
+            eventCT = (fl.get('event_count') is not None for f in  blockDump['files'] for fl in f['file_lumi_list'])
 
         redFlag = any(eventCT)
         if redFlag:
