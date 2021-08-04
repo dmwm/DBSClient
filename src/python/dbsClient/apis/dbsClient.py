@@ -1,4 +1,4 @@
-from dbs.exceptions.dbsClientException import dbsClientException
+from dbsClient.exceptions.dbsClientException import dbsClientException
 from RestClient.ErrorHandling.RestClientExceptions import HTTPError
 from RestClient.RestApi import RestApi
 from RestClient.AuthHandling.X509Auth import X509Auth
