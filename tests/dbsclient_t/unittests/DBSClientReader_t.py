@@ -23,7 +23,11 @@ def checkException400(f):
             if "Invalid input" not in de.reason:
                 self.fail("Exception was expected and was not raised.")
         except Exception as ex:
-            if 'HTTPError 400' not in ex.args[0]:
+            if 'HTTP Error 400' in str(ex):
+                pass
+            elif 'HTTPError 400' in str(ex):
+                pass
+            else:
                 self.fail("Exception was expected and was not raised.")
         else:
             self.fail("Exception was expected and was not raised.")
@@ -48,7 +52,7 @@ class DBSClientReader_t(unittest.TestCase):
 
     def setUp(self):
         """setup all necessary parameters"""
-        infofile = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "info.dict"), "r")
+        infofile = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "info.dict"), "r").read()
         self.testparams = importCode(infofile, "testparams", 0).info
         dataset=self.testparams['dataset']
         processed_ds_name = dataset.split('/')[2] 
@@ -89,7 +93,7 @@ class DBSClientReader_t(unittest.TestCase):
     def test006b(self):
         """test06b unittestDBSClientReader_t.listDatasets: """
         res = self.api.listDatasets(dataset=self.testparams['dataset'], detail=1)
-	self.api.listDatasets(dataset_id=res[0]["dataset_id"], detail=True, dataset_access_type='*')
+        self.api.listDatasets(dataset_id=res[0]["dataset_id"], detail=True, dataset_access_type='*')
 
     def test006c(self):
         """test06c unittestDBSClientReader_t.listDatasets: """
@@ -975,21 +979,21 @@ class DBSClientReader_t(unittest.TestCase):
         self.api.listFileArray(block_name=self.testparams['block'], run_num=1)
 
     def test034l(self):	
-	"""test34l unittestDBSClientReader_t.listFileArray: test split a call into more than one listFileArray  calls"""
+        """test34l unittestDBSClientReader_t.listFileArray: test split a call into more than one listFileArray  calls"""
         lfn=[]
         ds = self.api.listDatasets()
-	for d in ds:
-	    try: 	
-		files = self.api.listFiles(dataset=d['dataset'])
-		for f in files:
-		    lfn.append(f['logical_file_name'])
-		    if len(lfn) > 1200: break
-	        if len(lfn) > 1200: break
-	    except Exception:
-		pass
-	total= self.api.listFileArray(logical_file_name=lfn)
-	self.assertTrue(len(total)==len(lfn))
-	
+        for d in ds:
+            try: 	
+                files = self.api.listFiles(dataset=d['dataset'])
+                for f in files:
+                    lfn.append(f['logical_file_name'])
+                    if len(lfn) > 1200: break
+                if len(lfn) > 1200: break
+            except Exception:
+                pass
+        total= self.api.listFileArray(logical_file_name=lfn)
+        self.assertTrue(len(total)==len(lfn))
+
     def test041(self):
         """test41 unittestDBSClientReader_t.listFileParents: basic test"""
         self.api.listFileParents(logical_file_name=self.testparams['files'][0])
@@ -1086,9 +1090,9 @@ class DBSClientReader_t(unittest.TestCase):
     def test046aa4(self):
         """ test046aa4:  unittestDBSClientReader_t.listFileLumiArray with list of logical_file_name"""
         file_list = [self.testparams['files'][i] for i in range(5)]
-	try:
+        try:
             self.api.listFileLumiArray(logical_file_name=file_list, run_num=[self.testparams['runs'][0], self.testparams['runs'][1]],  validFileOnly=1)
-	except:
+        except:
             pass
         else:
             self.fail("exception was excepted, was not raised")
@@ -1372,13 +1376,13 @@ class DBSClientReader_t(unittest.TestCase):
 
     def test090a(self):
         """test90a: unittestDBSClientReader_t.listDatasetArray"""
-	res=self.api.listDatasets(dataset=self.testparams['dataset'], dataset_access_type="*", detail=1)
+        res=self.api.listDatasets(dataset=self.testparams['dataset'], dataset_access_type="*", detail=1)
         self.api.listDatasetArray(dataset_id=[res[0]['dataset_id']])
 
     def test091a(self):
         """test91a: unittestDBSClientReader_t.listDatasetArray with dataset_access_type"""
-	res1=self.api.listDatasets(dataset=self.testparams['dataset'], dataset_access_type="*", detail=1)
-	res2=self.api.listDatasets(dataset=self.testparams['parent_dataset'], dataset_access_type="*", detail=1)
+        res1=self.api.listDatasets(dataset=self.testparams['dataset'], dataset_access_type="*", detail=1)
+        res2=self.api.listDatasets(dataset=self.testparams['parent_dataset'], dataset_access_type="*", detail=1)
         self.api.listDatasetArray(dataset_id=[res1[0]['dataset_id'], res2[0]['dataset_id']])
 
     def test092a(self):

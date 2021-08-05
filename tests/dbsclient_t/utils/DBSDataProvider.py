@@ -90,7 +90,7 @@ class DBSDataProvider(object):
 
     def _generate_auto_cross_section(self):
         "generate auto cross section for a given file, if not already available"
-        return random.uniform(0.0, 100.0)
+        return round(random.uniform(0.0, 100.0), 4)
 
     def _generate_block_name(self):
         "generates new block name"
@@ -321,5 +321,5 @@ class DBSDataProvider(object):
     def xtc_cross_section(self):
         "return cross section value"
         if not hasattr(self, '_xtc_cross_section'):
-            self._xtc_cross_section = random.uniform(0.0, 1000.0)
+            self._xtc_cross_section = round(random.uniform(0.0, 1000.0), 4)
         return self._xtc_cross_section
