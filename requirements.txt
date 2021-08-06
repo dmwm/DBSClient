@@ -1,1 +1,2 @@
-pycurl==7.19.3
+pycurl==7.43.0.6
+dbs3-pycurl

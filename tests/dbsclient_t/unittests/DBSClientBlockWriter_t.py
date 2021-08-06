@@ -6,10 +6,9 @@ import os, sys, imp
 import time
 import uuid
 import unittest
-from dbs.apis.dbsClient import *
-from dbs.exceptions.dbsClientException import dbsClientException
+from dbsClient.apis.dbsClient import *
+from dbsClient.exceptions.dbsClientException import dbsClientException
 from RestClient.ErrorHandling.RestClientExceptions import HTTPError
-from ctypes import *
 import json
 
 def importCode(code,name,add_to_sys_modules=0):
@@ -35,7 +34,7 @@ class DBSClientBlockWriter_t(unittest.TestCase):
     def setUpClass(cls):
         """Class method to set-up the class"""
         ### necessary since one instance per test case is created and pid and testparams need to be shared between instances
-        infofile=open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'blockdump.dict'), "r")
+        infofile=open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'blockdump.dict'), "r").read()
         cls.testparams=importCode(infofile, "testparams", 0).blockDump
         cls.uid = uuid.uuid4().time_mid
         print("****uid=%s******" % cls.uid)
@@ -101,7 +100,7 @@ class DBSClientBlockWriter_t(unittest.TestCase):
     def test2000(self):
         """test2000 web.DBSClientWriter.insertBlockBulk with mixed event_count/lumi: basic test\n"""
 
-        infofile=open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'blockdump.dict'), "r")
+        infofile=open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'blockdump.dict'), "r").read()
         self.testparams=importCode(infofile, "testparams", 0).blockDump
         self.uid = uuid.uuid4().time_mid
 
@@ -130,7 +129,7 @@ class DBSClientBlockWriter_t(unittest.TestCase):
     def test3000(self):
         """test3000 web.DBSClientWriter.insertBlockBulk without event per lumi: basic test\n"""
 
-        infofile=open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'blockdump.dict'), "r")
+        infofile=open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'blockdump.dict'), "r").read()
         self.testparams=importCode(infofile, "testparams", 0).blockDump
         self.uid = uuid.uuid4().time_mid
 

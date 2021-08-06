@@ -8,10 +8,9 @@ import time
 import uuid
 import unittest
 import copy
-from dbs.apis.dbsClient import *
-from dbs.exceptions.dbsClientException import dbsClientException
+from dbsClient.apis.dbsClient import *
+from dbsClient.exceptions.dbsClientException import dbsClientException
 from RestClient.ErrorHandling.RestClientExceptions import HTTPError
-from ctypes import *
 
 uid = uuid.uuid4().time_mid
 print("****uid=%s******" %uid)

@@ -13,7 +13,7 @@ import random
 from dbsclient_t.utils.DBSDataProvider import DBSDataProvider
 from dbsclient_t.utils.timeout import Timeout
 from RestClient.ErrorHandling.RestClientExceptions import HTTPError
-from dbs.apis.dbsClient import *
+from dbsClient.apis.dbsClient import *
 
 uid = uuid.uuid4().time_mid
 print("****uid=%s******" % uid)
@@ -58,7 +58,7 @@ class DBSValidation_t(unittest.TestCase):
         self.api = DbsApi(url=url, proxy=proxy)
         migration_url = os.environ['DBS_MIGRATE_URL']
         self.migration_api = DbsApi(url=migration_url, proxy=proxy)
-	self.source_url='https://cmsweb.cern.ch:8443/dbs/prod/global/DBSReader'
+        self.source_url='https://cmsweb.cern.ch:8443/dbs/prod/global/DBSReader'
         self.cmsweb_api = DbsApi(url=self.source_url, proxy=proxy)
         self.cmswebtestbed_api = DbsApi(url='https://cmsweb-testbed.cern.ch/dbs/int/global/DBSReader', proxy=proxy)
 
@@ -316,9 +316,21 @@ class DBSValidation_t(unittest.TestCase):
         input_block_dump = self.data_provider.block_dump()[0]
         self.api.insertBulkBlock(input_block_dump)
         block_dump = self.api.blockDump(block_name=input_block_dump['block']['block_name'])
+        """
+        print("****************************************************************test11")
+        import pprint
+        print("input_block_dump")
+        pp = pprint.PrettyPrinter(indent=4)
+        pp.pprint(input_block_dump)
+        print("######################")
+        print("block_dump")
+        pp.pprint(block_dump)
+        print("****************************************************************")
+        """
         def check(input, output):
             if isinstance(input, dict):
                 for key, value in input.items():
+                    """
                     if key == "processing_era":
                         print("------input value----")
                         print(value)
@@ -328,7 +340,6 @@ class DBSValidation_t(unittest.TestCase):
                     if key == "description":
                         print("----input description---")
                         print(value)
-                    self.assertTrue(key in output)
                     if key == "processing_era":
                         print("---------output value -----------")
                         print(output[key])
@@ -338,9 +349,27 @@ class DBSValidation_t(unittest.TestCase):
                     if key == "description":
                         print("--------output description--------")
                         print(output[key])
+                    """
+                    self.assertTrue(key in output)
+                    if key == "file_lumi_list":
+                        output[key].sort(key=lambda x: x.get('lumi_section_num'))
+                        value.sort(key=lambda x: x.get('lumi_section_num'))
+                    elif key == "dataset_conf_list":
+                        output[key].sort(key=lambda x: x.get('output_module_label') + str(x.get('creation_date')))
+                        value.sort(key=lambda x: x.get('output_module_label') + str(x.get('creation_date')))
+                    elif key == "file_parent_list":
+                        output[key].sort(key=lambda x: x.get('parent_logical_file_name') + x.get('this_logical_file_name'))
+                        value.sort(key=lambda x: x.get('parent_logical_file_name') + x.get('this_logical_file_name'))
+                    elif key == "file_conf_list":
+                        output[key].sort(key=lambda x: x.get('lfn'))
+                        value.sort(key=lambda x: x.get('lfn'))
+                    elif key == "files":
+                        output[key].sort(key=lambda x: x.get('logical_file_name'))
+                        value.sort(key=lambda x: x.get('logical_file_name'))
                     check(value, output[key])
             elif isinstance(input, list):
-                for element_in, element_out in zip(sorted(input), sorted(output)):
+                for element_in, element_out in zip(sorted(input, key=lambda x: [x.keys() if isinstance(x, dict) else str(x)]), sorted(output, key=lambda x: [x.keys() if isinstance(x, dict) else str(x)])):
+                    print("elementToFind : " , element_in, element_out)
                     check(element_in, element_out)
             else:
                 self.assertEqual(str(input), str(output))
@@ -388,10 +417,25 @@ class DBSValidation_t(unittest.TestCase):
                             except KeyError:
                                 pass
                     self.assertTrue(key in output)
+                    if key == "file_lumi_list":
+                        output[key].sort(key=lambda x: x.get('lumi_section_num'))
+                        value.sort(key=lambda x: x.get('lumi_section_num'))
+                    elif key == "dataset_conf_list":
+                        output[key].sort(key=lambda x: x.get('output_module_label') + str(x.get('creation_date')))
+                        value.sort(key=lambda x: x.get('output_module_label') + str(x.get('creation_date')))
+                    elif key == "file_parent_list":
+                        output[key].sort(key=lambda x: x.get('parent_logical_file_name') + x.get('this_logical_file_name'))
+                        value.sort(key=lambda x: x.get('parent_logical_file_name') + x.get('this_logical_file_name'))
+                    elif key == "file_conf_list":
+                        output[key].sort(key=lambda x: x.get('lfn'))
+                        value.sort(key=lambda x: x.get('lfn'))
+                    elif key == "files":
+                        output[key].sort(key=lambda x: x.get('logical_file_name'))
+                        value.sort(key=lambda x: x.get('logical_file_name'))
                     check(value, output[key])
             elif isinstance(input, list):
-                for element_in, element_out in zip(sorted(remove_non_comparable_keys(input, non_comparable_keys)),
-                                                   sorted(remove_non_comparable_keys(output, non_comparable_keys))):
+                for element_in, element_out in zip(sorted(remove_non_comparable_keys(input, non_comparable_keys), key=lambda x: [x.keys() if isinstance(x, dict) else str(x)]),
+                                                   sorted(remove_non_comparable_keys(output, non_comparable_keys), key=lambda x: [x.keys() if isinstance(x, dict) else str(x)])):
                     check(element_in, element_out)
             else:
                 self.assertEqual(str(input), str(output))
@@ -399,6 +443,17 @@ class DBSValidation_t(unittest.TestCase):
         for block_name in (block['block_name'] for block in self.cmsweb_api.listBlocks(dataset=dataset_to_migrate)):
             block_dump_src = self.cmsweb_api.blockDump(block_name=block_name)
             block_dump_dest = self.api.blockDump(block_name=block_name)
+            """
+            print("****************************************************************test12")
+            import pprint
+            print("block_dump_src")
+            pp = pprint.PrettyPrinter(indent=4)
+            pp.pprint(block_dump_src)
+            print("######################")
+            print("block_dump_dest")
+            pp.pprint(block_dump_dest)
+            print("****************************************************************")
+            """
             check(block_dump_src, block_dump_dest)
 
         ###try to delete successfully executed migration request
@@ -449,16 +504,46 @@ class DBSValidation_t(unittest.TestCase):
                             except KeyError:
                                 pass
                     self.assertTrue(key in output)
+                    if key == "file_lumi_list":
+                        output[key].sort(key=lambda x: x.get('lumi_section_num'))
+                        value.sort(key=lambda x: x.get('lumi_section_num'))
+                    elif key == "dataset_conf_list":
+                        output[key].sort(key=lambda x: x.get('output_module_label') + str(x.get('creation_date')))
+                        value.sort(key=lambda x: x.get('output_module_label') + str(x.get('creation_date')))
+                    elif key == "file_parent_list":
+                        output[key].sort(key=lambda x: x.get('parent_logical_file_name') + x.get('this_logical_file_name'))
+                        value.sort(key=lambda x: x.get('parent_logical_file_name') + x.get('this_logical_file_name'))
+                    elif key == "file_conf_list":
+                        output[key].sort(key=lambda x: x.get('lfn'))
+                        value.sort(key=lambda x: x.get('lfn'))
+                    elif key == "files":
+                        output[key].sort(key=lambda x: x.get('logical_file_name'))
+                        value.sort(key=lambda x: x.get('logical_file_name'))
                     check(value, output[key])
             elif isinstance(input, list):
-                for element_in, element_out in zip(sorted(remove_non_comparable_keys(input, non_comparable_keys)),
-                                                   sorted(remove_non_comparable_keys(output, non_comparable_keys))):
+                print(remove_non_comparable_keys(input, non_comparable_keys))
+                print(remove_non_comparable_keys(input, non_comparable_keys))
+                for element_in, element_out in zip(sorted(remove_non_comparable_keys(input, non_comparable_keys), key=lambda x: [x.keys() if isinstance(x, dict) else str(x)]),
+                                                   sorted(remove_non_comparable_keys(output, non_comparable_keys), key=lambda x: [x.keys() if isinstance(x, dict) else str(x)])):
                     check(element_in, element_out)
             else:
+                print("FindThis", type(input))
+                print(type(output))
                 self.assertEqual(str(input), str(output))
 
         block_dump_src = self.cmsweb_api.blockDump(block_name=block_to_migrate)
         block_dump_dest = self.api.blockDump(block_name=block_to_migrate)
+        """
+        print("****************************************************************test13")
+        import pprint
+        print("block_dump_src")
+        pp = pprint.PrettyPrinter(indent=4)
+        pp.pprint(block_dump_src)
+        print("######################")
+        print("block_dump_dest")
+        pp.pprint(block_dump_dest)
+        print("****************************************************************")
+        """
         check(block_dump_src, block_dump_dest)
 
         ###try to delete successfully executed migration request
