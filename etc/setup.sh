@@ -21,15 +21,9 @@ else
     can_run=false
 fi
 
-# Create the directory etc if needed
-if [ ! -d ./etc/ ];
-then
-    mkdir ./etc/
-fi
-
 if [ "$can_run"=true ]
 then
-    FILE=./etc/var.sh
+    FILE=./var.sh
     if [ ! -f $FILE ];
     then
         >$FILE
@@ -42,7 +36,7 @@ then
         pip install --compile --install-option="--with-nss" --no-cache-dir pycurl
     fi
 
-    source ./etc/var.sh
+    source ./var.sh
     export PATH=$PythonFolder:$HOME/.local/bin:$PATH
     export PYTHONPATH=$PythonFolder:$PYTHONPATH
     export DBS3_CLIENT_ROOT=$SitePackageFolder/DbsClient/
