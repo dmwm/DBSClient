@@ -9,7 +9,6 @@ import unittest
 from dbsClient.apis.dbsClient import *
 from dbsClient.exceptions.dbsClientException import dbsClientException
 from RestClient.ErrorHandling.RestClientExceptions import HTTPError
-from ctypes import *
 import json
 
 def importCode(code,name,add_to_sys_modules=0):

@@ -1,34 +1,34 @@
 #!/bin/csh
 # install
 
-set can_run=True
+set can_run=true
 
 # Test python version
 set version=$(python -V 2>&1 | grep -Po '(?<=Python )(.+)')
 if (( -z "$version" ))
 then
     echo "No Python!"
-    set can_run=False
+    set can_run=false
 fi
 
 set parsedVersion=$(echo "${version//./}")
-if (( "$parsedVersion" -lt "360" && "$parsedVersion" -gt "380" && $can_run=True ))
+if (( "$parsedVersion" > "360" && "$can_run"=true ))
 then
     echo "Valid version"
 else
-    echo "Invalid version"
-    set can_run=False
+    echo "Invalid version. You need a version of python equal or higher than 3.6.0"
+    set can_run=false
 fi
 
 # Create the directory etc if needed
-if ( ! -d /etc/ );
+if ( ! -d ./etc/ );
 then
-    mkdir /etc/
+    mkdir ./etc/
 fi
 
-if [ $can_run=True ]
+if [ "$can_run"=true ]
 then
-    set FILE=~/etc/var.sh
+    set FILE=./etc/var.sh
     if ( ! -f $FILE )
     then
         >$FILE
@@ -41,12 +41,11 @@ then
         pip install --compile --install-option="--with-nss" --no-cache-dir pycurl
     endif
 
-    source ~/etc/var.sh
-    export PATH=$PythonFolder:$PATH
-    export PYTHONPATH=$PythonFolder
-    export PATH=$HOME/.local/bin:$PATH
+    source ./etc/var.sh
+    export PATH=$PythonFolder:$HOME/.local/bin:$PATH
+    export PYTHONPATH=$PythonFolder:$PYTHONPATH
     export DBS3_CLIENT=$SitePackageFolder/DbsClient/
-    export LD_LIBRARY_PATH=/usr/bin/
+    export LD_LIBRARY_PATH=$SitePackageFolder:$LD_LIBRARY_PATH
     export X509_USER_CERT=$HOME/.globus/usercert.pem
     export X509_USER_KEY=$HOME/.globus/userkey.pem
 
@@ -54,7 +53,7 @@ then
     if ( "$1" = "test" )
     then
         export DBS_WRITER_URL=https://cmsweb-testbed.cern.ch/dbs/int/global/DBSWriter/
-        export DBS_READER_URL=https://cmsweb-prod.cern.ch/dbs/prod/global/DBSReader/
+        export DBS_READER_URL=https://cmsweb-testbed.cern.ch/dbs/prod/global/DBSReader/
         
         echo $DBS_WRITER_URL
         echo $DBS_READER_URL
