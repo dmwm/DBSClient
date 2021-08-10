@@ -12,7 +12,7 @@ then
 fi
 
 set parsedVersion=$(echo "${version//./}")
-if (( "$parsedVersion" > "360" && "$can_run"=true ))
+if (( "$parsedVersion" -gt 360 && "$can_run"=true ))
 then
     echo "Valid version"
 else

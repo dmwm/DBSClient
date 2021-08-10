@@ -12,7 +12,7 @@ then
 fi
 
 parsedVersion=$(echo "${version//./}")
-if [[ "$parsedVersion" >= "360" && "$can_run"=true ]]
+if [[ "$parsedVersion" -gt 360 && "$can_run"="true" ]]
 then
     echo $parsedVersion
     echo "Valid version"
@@ -32,7 +32,7 @@ then
 
         # Loading pycurl
         pip uninstall pycurl
-         export PYCURL_SSL_LIBRARY=nss
+        export PYCURL_SSL_LIBRARY=nss
         pip install --compile --install-option="--with-nss" --no-cache-dir pycurl
     fi
 
