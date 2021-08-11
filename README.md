@@ -9,7 +9,7 @@ group of CMS. DBS 3 is using the Java Script Object Notation (JSON) dataformat f
 In this first part we are going to install Python 3 and pip. We are going to follow the following 
 [tutorial](https://thelazylog.com/install-python-as-local-user-on-linux/) in the next sections.
 ## 1.1 Installation of Python 3.8.2
-We are going to install Python 3.6.5. *Note : You can download any version higher that 3.6.0 instead.*
+We are going to install Python 3.8.2.
     mkdir $HOME/python
     cd $HOME/python
     wget https://www.python.org/ftp/python/3.8.2/Python-3.8.2.tgz
@@ -21,7 +21,8 @@ python could not find gcc. Please then run the following command: - Redhat base:
 openssl-devel` `sudo yum -y install libffi-devel` - Debian base: `sudo apt-get install build-essential` `sudo apt-get install openssl-devel` `sudo 
 apt-get -y install libffi-devel` Solution found on 
 [stackoverflow](https://stackoverflow.com/questions/19816275/python-no-acceptable-c-compiler-found-in-path-when-installing-python). You will then be 
-able to redo the previous command (`./configure --prefix=$HOME/python`).
+able to redo the previous command (`./configure --prefix=$HOME/python`). To finish run the following: `make && make install` `export 
+PATH=$HOME/python/Python-3.8.2/:$PATH` `export PYTHONPATH=$HOME/python/Python-3.8.2`
 ## 1.2 Installation of pip
 Pypi (Python Package Index) is a repository of software for the Python programming language. In other word, Pypi is where most libraries are stored 
 and updated. Anyone can download any library on Pypi and upload his own library. To get a library from Pypi we need pip. Two way to install pip. You 
@@ -50,14 +51,15 @@ We can also check their versions:
     python --version
     pip --version
  
-Be sure to have a **python** version higher than **3.6.0** (version 3.8.2 is recommanded) and **pip** version higher than **21.0.0**. You can now 
+Be sure to have a **python** version higher than **3.8.2** (version 3.8.2 is recommanded) and **pip** version higher than **21.0.0**. You can now 
 export those path:
     export PATH=$HOME/python/Python-3.8.2/:$HOME/.local/bin:$PATH
 	export PYTHONPATH=$HOME/python/Python-3.8.2/:$PYTHONPATH
 	export LD_LIBRARY_PATH="$(python -c 'import site; print(site.getsitepackages()[0])')":$LD_LIBRARY_PATH
 ## 1.4 Download of libcurl
-To use libcurl, is highly recommanded to use linux or MacOS. Dbs3-client use pycurl, which requires libcurl. We will see in this section how to get 
-libcurl. Run the following command: - Redhat base: `sudo yum install libcurl-devel` - Debian base: `sudo apt-get install libcurl-devel`
+*Note: If libcurl is already installed, you can skip this step.* To use libcurl, is highly recommanded to use linux or MacOS. Dbs3-client use pycurl, 
+which requires libcurl. We will see in this section how to get libcurl. Run the following command: - Redhat base: `sudo yum install libcurl-devel` - 
+Debian base: `sudo apt-get install libcurl-devel`
 ## 1.5 Dowload pycurl
 PycURL is a Python interface to [libcurl](https://curl.haxx.se/libcurl/), the multiprotocol file transfer library. Similarly to the 
 [urllib](http://docs.python.org/library/urllib.html) Python module, PycURL can be used to fetch objects identified by a URL from a Python program. 

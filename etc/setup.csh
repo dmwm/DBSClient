@@ -12,11 +12,11 @@ then
 fi
 
 set parsedVersion=$(echo "${version//./}")
-if (( "$parsedVersion" -ge 360 && "$can_run"=true ))
+if (( "$parsedVersion" -ge 382 && "$can_run"=true ))
 then
     echo "Valid version"
 else
-    echo "Invalid version. You need a version of python equal or higher than 3.6.0"
+    echo "Invalid version. You need a version of python equal or higher than 3.8.2"
     set can_run=false
 fi
 
