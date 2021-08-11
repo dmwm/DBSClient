@@ -12,12 +12,11 @@ then
 fi
 
 parsedVersion=$(echo "${version//./}")
-if [[ "$parsedVersion" >= "360" && "$can_run"=true ]]
+if [[ "$parsedVersion" -ge 382 && "$can_run"="true" ]]
 then
-    echo $parsedVersion
     echo "Valid version"
 else
-    echo "Invalid version. You need a version of python equal or higher than 3.6.0"
+    echo "Invalid version. You need a version of python equal or higher than 3.8.2"
     can_run=false
 fi
 
@@ -32,7 +31,7 @@ then
 
         # Loading pycurl
         pip uninstall pycurl
-         export PYCURL_SSL_LIBRARY=nss
+        export PYCURL_SSL_LIBRARY=nss
         pip install --compile --install-option="--with-nss" --no-cache-dir pycurl
     fi
 
@@ -55,5 +54,5 @@ then
     fi
 
 
-    echo $DBS3_CLIENT
+    echo $DBS3_CLIENT_ROOT # Root folder of the dbs client library
 fi
