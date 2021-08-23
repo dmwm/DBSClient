@@ -366,10 +366,13 @@ class DBSValidation_t(unittest.TestCase):
                     elif key == "files":
                         output[key].sort(key=lambda x: x.get('logical_file_name'))
                         value.sort(key=lambda x: x.get('logical_file_name'))
+                    elif key == "block_parent_list":
+                        output[key].sort(key=lambda x: x.get('parent_block_name'))
+                        value.sort(key=lambda x: x.get('parent_block_name'))
+
                     check(value, output[key])
             elif isinstance(input, list):
                 for element_in, element_out in zip(sorted(input, key=lambda x: [x.keys() if isinstance(x, dict) else str(x)]), sorted(output, key=lambda x: [x.keys() if isinstance(x, dict) else str(x)])):
-                    print("elementToFind : " , element_in, element_out)
                     check(element_in, element_out)
             else:
                 self.assertEqual(str(input), str(output))
@@ -432,6 +435,10 @@ class DBSValidation_t(unittest.TestCase):
                     elif key == "files":
                         output[key].sort(key=lambda x: x.get('logical_file_name'))
                         value.sort(key=lambda x: x.get('logical_file_name'))
+                    elif key == "block_parent_list":
+                        output[key].sort(key=lambda x: x.get('parent_block_name'))
+                        value.sort(key=lambda x: x.get('parent_block_name'))
+
                     check(value, output[key])
             elif isinstance(input, list):
                 for element_in, element_out in zip(sorted(remove_non_comparable_keys(input, non_comparable_keys), key=lambda x: [x.keys() if isinstance(x, dict) else str(x)]),
@@ -443,7 +450,7 @@ class DBSValidation_t(unittest.TestCase):
         for block_name in (block['block_name'] for block in self.cmsweb_api.listBlocks(dataset=dataset_to_migrate)):
             block_dump_src = self.cmsweb_api.blockDump(block_name=block_name)
             block_dump_dest = self.api.blockDump(block_name=block_name)
-            """
+            """ 
             print("****************************************************************test12")
             import pprint
             print("block_dump_src")
@@ -519,6 +526,10 @@ class DBSValidation_t(unittest.TestCase):
                     elif key == "files":
                         output[key].sort(key=lambda x: x.get('logical_file_name'))
                         value.sort(key=lambda x: x.get('logical_file_name'))
+                    elif key == "block_parent_list":
+                        output[key].sort(key=lambda x: x.get('parent_block_name'))
+                        value.sort(key=lambda x: x.get('parent_block_name'))
+
                     check(value, output[key])
             elif isinstance(input, list):
                 print(remove_non_comparable_keys(input, non_comparable_keys))
@@ -527,8 +538,6 @@ class DBSValidation_t(unittest.TestCase):
                                                    sorted(remove_non_comparable_keys(output, non_comparable_keys), key=lambda x: [x.keys() if isinstance(x, dict) else str(x)])):
                     check(element_in, element_out)
             else:
-                print("FindThis", type(input))
-                print(type(output))
                 self.assertEqual(str(input), str(output))
 
         block_dump_src = self.cmsweb_api.blockDump(block_name=block_to_migrate)
