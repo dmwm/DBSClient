@@ -2,6 +2,7 @@
 # install
 
 can_run=true
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 # Test python version
 version=$(python -V 2>&1 | grep -Po '(?<=Python )(.+)')
@@ -14,15 +15,15 @@ fi
 parsedVersion=$(echo "${version//./}")
 if [[ "$parsedVersion" -ge 382 && "$can_run"="true" ]]
 then
-    echo "Valid version"
+    echo "Python version: ${version}. It is a valid version."
 else
-    echo "Invalid version. You need a version of python equal or higher than 3.8.2"
+    echo "Invalid Python version. You need a version of python equal or higher than 3.8.2"
     can_run=false
 fi
 
 if [ "$can_run"=true ]
 then
-    FILE=./var.sh
+    FILE=${SCRIPT_DIR}/var.sh
     if [ ! -f $FILE ];
     then
         >$FILE
@@ -32,10 +33,11 @@ then
         # Loading pycurl
         pip uninstall pycurl
         export PYCURL_SSL_LIBRARY=nss
-        pip install --compile --install-option="--with-nss" --no-cache-dir pycurl
+	# To fix in requirement.txt
+        pip install --compile --install-option="--with-nss" --no-cache-dir pycurl==7.19.0.6
     fi
 
-    source ./var.sh
+    source ${SCRIPT_DIR}/var.sh
     export PATH=$PythonFolder:$HOME/.local/bin:$PATH
     export PYTHONPATH=$PythonFolder:$PYTHONPATH
     export DBS3_CLIENT_ROOT=$SitePackageFolder/DbsClient/
@@ -54,5 +56,5 @@ then
     fi
 
 
-    echo $DBS3_CLIENT_ROOT # Root folder of the dbs client library
+    echo "DBS3_CLIENT_ROOT: "$DBS3_CLIENT_ROOT # Root folder of the dbs client library
 fi

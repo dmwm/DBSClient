@@ -2,6 +2,7 @@
 # install
 
 set can_run=true
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 # Test python version
 set version=$(python -V 2>&1 | grep -Po '(?<=Python )(.+)')
@@ -14,15 +15,15 @@ fi
 set parsedVersion=$(echo "${version//./}")
 if (( "$parsedVersion" -ge 382 && "$can_run"=true ))
 then
-    echo "Valid version"
+    echo "Pyhton version: ${version}. It is a valid version."
 else
-    echo "Invalid version. You need a version of python equal or higher than 3.8.2"
+    echo "Invalid Python version. You need a version of python equal or higher than 3.8.2"
     set can_run=false
 fi
 
 if [ "$can_run"=true ]
 then
-    set FILE=./var.sh
+    set FILE=${SCRIPT_DIR}/var.sh
     if ( ! -f $FILE )
     then
         >$FILE
@@ -35,7 +36,7 @@ then
         pip install --compile --install-option="--with-nss" --no-cache-dir pycurl
     endif
 
-    source ./var.sh
+    source ${SCRIPT_DIR}/var.sh
     export PATH=$PythonFolder:$HOME/.local/bin:$PATH
     export PYTHONPATH=$PythonFolder:$PYTHONPATH
     export DBS3_CLIENT_ROOT=$SitePackageFolder/DbsClient/

@@ -316,7 +316,7 @@ class DBSValidation_t(unittest.TestCase):
         input_block_dump = self.data_provider.block_dump()[0]
         self.api.insertBulkBlock(input_block_dump)
         block_dump = self.api.blockDump(block_name=input_block_dump['block']['block_name'])
-        """
+        
         print("****************************************************************test11")
         import pprint
         print("input_block_dump")
@@ -326,7 +326,7 @@ class DBSValidation_t(unittest.TestCase):
         print("block_dump")
         pp.pprint(block_dump)
         print("****************************************************************")
-        """
+        
         def check(input, output):
             if isinstance(input, dict):
                 for key, value in input.items():
@@ -366,10 +366,13 @@ class DBSValidation_t(unittest.TestCase):
                     elif key == "files":
                         output[key].sort(key=lambda x: x.get('logical_file_name'))
                         value.sort(key=lambda x: x.get('logical_file_name'))
+                    elif key == "block_parent_list":
+                        output[key].sort(key=lambda x: x.get('parent_block_name'))
+                        value.sort(key=lambda x: x.get('parent_block_name'))
+
                     check(value, output[key])
             elif isinstance(input, list):
                 for element_in, element_out in zip(sorted(input, key=lambda x: [x.keys() if isinstance(x, dict) else str(x)]), sorted(output, key=lambda x: [x.keys() if isinstance(x, dict) else str(x)])):
-                    print("elementToFind : " , element_in, element_out)
                     check(element_in, element_out)
             else:
                 self.assertEqual(str(input), str(output))
@@ -432,6 +435,10 @@ class DBSValidation_t(unittest.TestCase):
                     elif key == "files":
                         output[key].sort(key=lambda x: x.get('logical_file_name'))
                         value.sort(key=lambda x: x.get('logical_file_name'))
+                    elif key == "block_parent_list":
+                        output[key].sort(key=lambda x: x.get('parent_block_name'))
+                        value.sort(key=lambda x: x.get('parent_block_name'))
+
                     check(value, output[key])
             elif isinstance(input, list):
                 for element_in, element_out in zip(sorted(remove_non_comparable_keys(input, non_comparable_keys), key=lambda x: [x.keys() if isinstance(x, dict) else str(x)]),
@@ -443,7 +450,7 @@ class DBSValidation_t(unittest.TestCase):
         for block_name in (block['block_name'] for block in self.cmsweb_api.listBlocks(dataset=dataset_to_migrate)):
             block_dump_src = self.cmsweb_api.blockDump(block_name=block_name)
             block_dump_dest = self.api.blockDump(block_name=block_name)
-            """
+            
             print("****************************************************************test12")
             import pprint
             print("block_dump_src")
@@ -453,7 +460,7 @@ class DBSValidation_t(unittest.TestCase):
             print("block_dump_dest")
             pp.pprint(block_dump_dest)
             print("****************************************************************")
-            """
+            
             check(block_dump_src, block_dump_dest)
 
         ###try to delete successfully executed migration request
@@ -519,6 +526,10 @@ class DBSValidation_t(unittest.TestCase):
                     elif key == "files":
                         output[key].sort(key=lambda x: x.get('logical_file_name'))
                         value.sort(key=lambda x: x.get('logical_file_name'))
+                    elif key == "block_parent_list":
+                        output[key].sort(key=lambda x: x.get('parent_block_name'))
+                        value.sort(key=lambda x: x.get('parent_block_name'))
+
                     check(value, output[key])
             elif isinstance(input, list):
                 print(remove_non_comparable_keys(input, non_comparable_keys))
@@ -527,13 +538,11 @@ class DBSValidation_t(unittest.TestCase):
                                                    sorted(remove_non_comparable_keys(output, non_comparable_keys), key=lambda x: [x.keys() if isinstance(x, dict) else str(x)])):
                     check(element_in, element_out)
             else:
-                print("FindThis", type(input))
-                print(type(output))
                 self.assertEqual(str(input), str(output))
 
         block_dump_src = self.cmsweb_api.blockDump(block_name=block_to_migrate)
         block_dump_dest = self.api.blockDump(block_name=block_to_migrate)
-        """
+       
         print("****************************************************************test13")
         import pprint
         print("block_dump_src")
@@ -543,7 +552,7 @@ class DBSValidation_t(unittest.TestCase):
         print("block_dump_dest")
         pp.pprint(block_dump_dest)
         print("****************************************************************")
-        """
+        
         check(block_dump_src, block_dump_dest)
 
         ###try to delete successfully executed migration request
