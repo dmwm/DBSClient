@@ -4,7 +4,7 @@ import sys
 from setuptools import setup
 
 # version of pycurl-client, should match current DBS release tag
-package_version = "3.17.3"
+package_version = "3.17.4"
 
 # Requirements file for pip dependencies
 requirements = "requirements.txt"
@@ -32,7 +32,7 @@ setup(name="dbs3-client",
                 'dbsClient.exceptions'],
       package_dir={'': 'src/python'},
       install_requires=parse_requirements(requirements),
-      url="https://github.com/dmwm/DBSClient/tree/3.17.3",
+      url="https://github.com/dmwm/DBSClient/tree/3.17.4",
       license="Apache License, Version 2.0",
       )
 
