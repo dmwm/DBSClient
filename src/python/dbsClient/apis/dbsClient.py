@@ -1496,7 +1496,7 @@ class DbsApi(object):
 
         checkInputParameter(method="listReleaseVersions", parameters=list(kwargs.keys()), validParameters=validParameters)
 
-        return self.__callServer("releaseversions", params=kwargs, aggFunc=aggReleaseVerssions)
+        return self.__callServer("releaseversions", params=kwargs, aggFunc=aggReleaseVersions)
 
     def listRuns(self, **kwargs):
         """
