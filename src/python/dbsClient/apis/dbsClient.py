@@ -60,6 +60,16 @@ def aggReleaseVersions(results):
     """
     return aggAttribute(results, 'release_version')
 
+def aggDatasetAccessTypes(results):
+    """
+    performs dataset access types API aggregation
+
+    :param: results: list JSON records
+    :type: list
+    :return: aggregated list of JSON records
+    """
+    return aggAttribute(results, 'dataset_access_type')
+
 def aggFileLumis(results):
     """
     performs filelumis API aggregation
@@ -957,7 +967,7 @@ class DbsApi(object):
 
         checkInputParameter(method="listDatasetAccessTypes", parameters=list(kwargs.keys()), validParameters=validParameters)
 
-        return self.__callServer("datasetaccesstypes", params=kwargs)
+        return self.__callServer("datasetaccesstypes", params=kwargs, aggFunc=aggDatasetAccessTypes)
 
     def listDatasetArray(self, **kwargs):
         """
