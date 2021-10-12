@@ -10,6 +10,30 @@ import socket
 import sys
 import urllib.request, urllib.parse, urllib.error
 
+def parseStream(results):
+    "Parse given stream of results"
+    for rec in results.split('\n'):
+        if rec:
+            yield json.loads(rec)
+
+def aggAttribute(results, attr):
+    "perform aggregation based on given attribute"
+    rows = []
+    for row in results:
+        if attr in row and not isinstance(row[attr], list):
+            rows.append(row[attr])
+    if len(rows) > 0:
+        return [{attr: rows}]
+    return results
+
+def aggRuns(results):
+    "perform runs API aggregation"
+    return aggAttribute(results, 'run_num')
+
+def aggReleaseVersions(results):
+    "perform releases API aggregation"
+    return aggAttribute(results, 'release_version')
+
 def slicedIterator(sourceList, sliceSize):
     """
     :param: sourceList: list which need to be sliced
@@ -138,7 +162,7 @@ def split_calls(func):
 
 class DbsApi(object):
     #added CAINFO and userAgent (see github issue #431 & #432)
-    def __init__(self, url="", proxy=None, key=None, cert=None, verifypeer=True, debug=0, ca_info=None, userAgent="", port=8443):
+    def __init__(self, url="", proxy=None, key=None, cert=None, verifypeer=True, debug=0, ca_info=None, userAgent="", port=8443, accept="application/json", aggregate=True):
         """
         DbsApi Constructor
 
@@ -165,11 +189,13 @@ class DbsApi(object):
         self.key = key
         self.cert = cert
         self.userAgent = userAgent
+        self.accept = accept
+        self.aggregate = aggregate
 
         self.rest_api = RestApi(auth=X509Auth(ssl_cert=cert, ssl_key=key, ssl_verifypeer=verifypeer, ca_info=ca_info),
                                 proxy=Socks5Proxy(proxy_url=self.proxy) if self.proxy else None)
 
-    def __callServer(self, method="", params={}, data={}, callmethod='GET', content='application/json'):
+    def __callServer(self, method="", params={}, data={}, callmethod='GET', content='application/json', aggFunc=None):
         """
         A private method to make HTTP call to the DBS Server
 
@@ -190,7 +216,7 @@ class DbsApi(object):
             UserAgent = "DBSClient/"+os.environ['DBS3_CLIENT_VERSION']+"/"+ self.userAgent
         except:
             UserAgent = "DBSClient/Unknown"+"/"+ self.userAgent
-        request_headers =  {"Content-Type": content, "Accept": content, "UserID": UserID, "User-Agent":UserAgent }
+        request_headers =  {"Content-Type": content, "Accept": self.accept, "UserID": UserID, "User-Agent":UserAgent }
 
         method_func = getattr(self.rest_api, callmethod.lower())
 
@@ -201,7 +227,9 @@ class DbsApi(object):
         except HTTPError as http_error:
             self.__parseForException(http_error)
 
-        if content != "application/json":
+        if self.accept == "application/ndjson":
+            return parseStream(self.http_response.body)
+        if self.accept != "application/json":
             return self.http_response.body
 
         try:
@@ -210,6 +238,8 @@ class DbsApi(object):
             print("The server output is not a valid json, most probably you have a typo in the url.\n%s.\n" % self.url, file=sys.stderr)
             raise dbsClientException("Invalid url", "Possible urls are %s" %self.http_response.body)
 
+        if self.aggregate and aggFunc:
+            return aggFunc(json_ret)
         return json_ret
 
     def __parseForException(self, http_error):
@@ -1466,7 +1496,7 @@ class DbsApi(object):
 
         checkInputParameter(method="listReleaseVersions", parameters=list(kwargs.keys()), validParameters=validParameters)
 
-        return self.__callServer("releaseversions", params=kwargs)
+        return self.__callServer("releaseversions", params=kwargs, aggFunc=aggReleaseVerssions)
 
     def listRuns(self, **kwargs):
         """
@@ -1490,7 +1520,7 @@ class DbsApi(object):
         checkInputParameter(method="listRuns", parameters=list(kwargs.keys()), validParameters=validParameters,
                             requiredParameters=requiredParameters)
 
-        return self.__callServer("runs", params=kwargs)
+        return self.__callServer("runs", params=kwargs, aggFunc=aggRuns)
 
     def listRunSummaries(self, **kwargs):
         """
