@@ -101,6 +101,56 @@ def aggFileLumis(results):
         output.append(rec)
     return output
 
+def aggFileParents(results):
+    """
+    performs FileParents API aggregation
+
+    :param: results: list JSON records
+    :type: list
+    :return: aggregated list of JSON records
+    """
+    output = []
+    parents = {}
+    for rec in results:
+        lfn = rec['logical_file_name']
+        parent = rec['parent_logical_file_name']
+        if isinstance(parent, list):
+            break
+        parents.setdefault(lfn, []).append(parent)
+    # if we get results from Python server no aggregation is required
+    if len(parents) == 0:
+        return results
+    # if we got results from GO server we need to perform aggregation of results based on file/run pair
+    for lfn in parents.keys():
+        rec = {'logical_file_name': lfn, 'parent_logical_file_name': parents[lfn]}
+        output.append(rec)
+    return output
+
+def aggFileChildren(results):
+    """
+    performs FileChildren API aggregation
+
+    :param: results: list JSON records
+    :type: list
+    :return: aggregated list of JSON records
+    """
+    output = []
+    children = {}
+    for rec in results:
+        lfn = rec['logical_file_name']
+        child = rec['child_logical_file_name']
+        if isinstance(child, list):
+            break
+        children.setdefault(lfn, []).append(child)
+    # if we get results from Python server no aggregation is required
+    if len(children) == 0:
+        return results
+    # if we got results from GO server we need to perform aggregation of results based on file/run pair
+    for lfn in children.keys():
+        rec = {'logical_file_name': lfn, 'child_logical_file_name': children[lfn]}
+        output.append(rec)
+    return output
+
 def slicedIterator(sourceList, sliceSize):
     """
     :param: sourceList: list which need to be sliced
@@ -1045,7 +1095,7 @@ class DbsApi(object):
         checkInputParameter(method="listFileChildren", parameters=list(kwargs.keys()), validParameters=validParameters,
                             requiredParameters=requiredParameters)
 
-        return self.__callServer("filechildren", params=kwargs)
+        return self.__callServer("filechildren", params=kwargs, aggFunc=aggFileChildren)
 
     def listFileLumis(self, **kwargs):
         """
@@ -1134,7 +1184,7 @@ class DbsApi(object):
         checkInputParameter(method="listFileParents", parameters=list(kwargs.keys()), validParameters=validParameters,
                             requiredParameters=requiredParameters)
 
-        return self.__callServer("fileparents", params=kwargs)
+        return self.__callServer("fileparents", params=kwargs, aggFunc=aggFileParents)
 
     def listFiles_doc(self, **kwargs):
         """
