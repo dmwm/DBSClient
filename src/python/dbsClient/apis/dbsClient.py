@@ -11,13 +11,27 @@ import sys
 import urllib.request, urllib.parse, urllib.error
 
 def parseStream(results):
-    "Parse given stream of results"
+    """"
+    Parse given stream of results
+
+    :param: results: list JSON records
+    :type: list
+    :return: generator of JSON records
+    """
     for rec in results.split('\n'):
         if rec:
             yield json.loads(rec)
 
 def aggAttribute(results, attr):
-    "perform aggregation based on given attribute"
+    """
+    performs aggregation based on given attribute
+
+    :param: results: list JSON records
+    :type: list
+    :param: attr is name of the attribute in JSON record, e.g. run_num
+    :type: string
+    :return: aggregated list of JSON records
+    """
     rows = []
     for row in results:
         if attr in row and not isinstance(row[attr], list):
@@ -27,12 +41,65 @@ def aggAttribute(results, attr):
     return results
 
 def aggRuns(results):
-    "perform runs API aggregation"
+    """
+    performs runs API aggregation
+
+    :param: results: list JSON records
+    :type: list
+    :return: aggregated list of JSON records
+    """
     return aggAttribute(results, 'run_num')
 
 def aggReleaseVersions(results):
-    "perform releases API aggregation"
+    """
+    performs release version API aggregation
+
+    :param: results: list JSON records
+    :type: list
+    :return: aggregated list of JSON records
+    """
     return aggAttribute(results, 'release_version')
+
+def aggFileLumis(results):
+    """
+    performs filelumis API aggregation
+
+    :param: results: list JSON records
+    :type: list
+    :return: aggregated list of JSON records
+    """
+    output = []
+    file_run_lumi = {}
+    event_ct = False
+    if results and 'event_count' in results[0]:
+        event_ct = True
+    for rec in results:
+        run = rec['run_num']
+        lfn = rec['logical_file_name']
+        lumi = rec['lumi_section_num']
+        if isinstance(lumi, list):
+            break
+        if event_ct:
+            file_run_lumi.setdefault((lfn, run), []).append([rec['lumi_section_num'], rec['event_count']])
+        else:
+            file_run_lumi.setdefault((lfn, run), []).append(rec['lumi_section_num'])
+    # if we get results from Python server no aggregation is required
+    if len(file_run_lumi) == 0:
+        return results
+    # if we got results from GO server we need to perform aggregation of results based on file/run pair
+    for key in file_run_lumi.keys():
+        val = file_run_lumi[key]
+        if event_ct:
+            lumi=[]
+            event=[]
+            for item in val:
+                lumi.append(item[0])
+                event.append(item[1])
+            rec = {'logical_file_name':key[0], 'run_num':key[1], 'lumi_section_num':lumi, 'event_count':event}
+        else:
+            rec = {'logical_file_name':key[0], 'run_num':key[1], 'lumi_section_num':val}
+        output.append(rec)
+    return output
 
 def slicedIterator(sourceList, sliceSize):
     """
@@ -1004,7 +1071,7 @@ class DbsApi(object):
         checkInputParameter(method="listFileLumis", parameters=list(kwargs.keys()), validParameters=validParameters,
                             requiredParameters=requiredParameters)
 
-        return self.__callServer("filelumis", params=kwargs)
+        return self.__callServer("filelumis", params=kwargs, aggFunc=aggFileLumis)
 
     def listFileLumiArray(self, **kwargs):
         """
