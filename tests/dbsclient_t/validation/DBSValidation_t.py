@@ -13,7 +13,7 @@ import random
 from dbsclient_t.utils.DBSDataProvider import DBSDataProvider
 from dbsclient_t.utils.timeout import Timeout
 from RestClient.ErrorHandling.RestClientExceptions import HTTPError
-from dbsClient.apis.dbsClient import *
+from dbs.apis.dbsClient import *
 
 uid = uuid.uuid4().time_mid
 print("****uid=%s******" % uid)
