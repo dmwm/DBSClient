@@ -90,13 +90,16 @@ def aggFileLumis(results):
         if isinstance(lumi, list):
             break
         if event_ct:
-            file_run_lumi.setdefault((lfn, run), []).append([rec['lumi_section_num'], rec['event_count']])
+            file_run_lumi.setdefault((lfn, run), []).append(
+                    [rec['lumi_section_num'], rec['event_count']])
         else:
-            file_run_lumi.setdefault((lfn, run), []).append(rec['lumi_section_num'])
+            file_run_lumi.setdefault((lfn, run), []).append(
+                    rec['lumi_section_num'])
     # if we get results from Python server no aggregation is required
     if len(file_run_lumi) == 0:
         return results
-    # if we got results from GO server we need to perform aggregation of results based on file/run pair
+    # if we got results from GO server we need to perform
+    # aggregation of results based on file/run pair
     for key in file_run_lumi.keys():
         val = file_run_lumi[key]
         if event_ct:
@@ -105,9 +108,18 @@ def aggFileLumis(results):
             for item in val:
                 lumi.append(item[0])
                 event.append(item[1])
-            rec = {'logical_file_name':key[0], 'run_num':key[1], 'lumi_section_num':lumi, 'event_count':event}
+            rec = {
+                    'logical_file_name':key[0],
+                    'run_num':key[1],
+                    'lumi_section_num':lumi,
+                    'event_count':event
+            }
         else:
-            rec = {'logical_file_name':key[0], 'run_num':key[1], 'lumi_section_num':val}
+            rec = {
+                    'logical_file_name':key[0],
+                    'run_num':key[1],
+                    'lumi_section_num':val
+            }
         output.append(rec)
     return output
 
@@ -155,7 +167,8 @@ def aggFileChildren(results):
     # if we get results from Python server no aggregation is required
     if len(children) == 0:
         return results
-    # if we got results from GO server we need to perform aggregation of results based on file/run pair
+    # if we got results from GO server we need to perform
+    # aggregation of results based on file/run pair
     for lfn in children.keys():
         rec = {'logical_file_name': lfn, 'child_logical_file_name': children[lfn]}
         output.append(rec)
