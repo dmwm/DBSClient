@@ -11,7 +11,7 @@ import sys
 import urllib.request, urllib.parse, urllib.error
 
 def parseStream(results):
-    """"
+    """
     Parse given stream of results
 
     :param: results: list JSON records
