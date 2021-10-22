@@ -10,6 +10,170 @@ import socket
 import sys
 import urllib.request, urllib.parse, urllib.error
 
+def parseStream(results):
+    """
+    Parse given stream of results
+
+    :param: results: list JSON records
+    :type: list
+    :return: generator of JSON records
+    """
+    for rec in results.split('\n'):
+        if rec:
+            yield json.loads(rec)
+
+def aggAttribute(results, attr):
+    """
+    performs aggregation based on given attribute
+
+    :param: results: list JSON records
+    :type: list
+    :param: attr is name of the attribute in JSON record, e.g. run_num
+    :type: string
+    :return: aggregated list of JSON records
+    """
+    rows = []
+    for row in results:
+        if attr in row and not isinstance(row[attr], list):
+            rows.append(row[attr])
+    if len(rows) > 0:
+        return [{attr: rows}]
+    return results
+
+def aggRuns(results):
+    """
+    performs runs API aggregation
+
+    :param: results: list JSON records
+    :type: list
+    :return: aggregated list of JSON records
+    """
+    return aggAttribute(results, 'run_num')
+
+def aggReleaseVersions(results):
+    """
+    performs release version API aggregation
+
+    :param: results: list JSON records
+    :type: list
+    :return: aggregated list of JSON records
+    """
+    return aggAttribute(results, 'release_version')
+
+def aggDatasetAccessTypes(results):
+    """
+    performs dataset access types API aggregation
+
+    :param: results: list JSON records
+    :type: list
+    :return: aggregated list of JSON records
+    """
+    return aggAttribute(results, 'dataset_access_type')
+
+def aggFileLumis(results):
+    """
+    performs filelumis API aggregation
+
+    :param: results: list JSON records
+    :type: list
+    :return: aggregated list of JSON records
+    """
+    output = []
+    file_run_lumi = {}
+    event_ct = False
+    if results and 'event_count' in results[0]:
+        event_ct = True
+    for rec in results:
+        run = rec['run_num']
+        lfn = rec['logical_file_name']
+        lumi = rec['lumi_section_num']
+        if isinstance(lumi, list):
+            break
+        if event_ct:
+            file_run_lumi.setdefault((lfn, run), []).append(
+                    [rec['lumi_section_num'], rec['event_count']])
+        else:
+            file_run_lumi.setdefault((lfn, run), []).append(
+                    rec['lumi_section_num'])
+    # if we get results from Python server no aggregation is required
+    if len(file_run_lumi) == 0:
+        return results
+    # if we got results from GO server we need to perform
+    # aggregation of results based on file/run pair
+    for key in file_run_lumi.keys():
+        val = file_run_lumi[key]
+        if event_ct:
+            lumi=[]
+            event=[]
+            for item in val:
+                lumi.append(item[0])
+                event.append(item[1])
+            rec = {
+                    'logical_file_name':key[0],
+                    'run_num':key[1],
+                    'lumi_section_num':lumi,
+                    'event_count':event
+            }
+        else:
+            rec = {
+                    'logical_file_name':key[0],
+                    'run_num':key[1],
+                    'lumi_section_num':val
+            }
+        output.append(rec)
+    return output
+
+def aggFileParents(results):
+    """
+    performs FileParents API aggregation
+
+    :param: results: list JSON records
+    :type: list
+    :return: aggregated list of JSON records
+    """
+    output = []
+    parents = {}
+    for rec in results:
+        lfn = rec['logical_file_name']
+        parent = rec['parent_logical_file_name']
+        if isinstance(parent, list):
+            break
+        parents.setdefault(lfn, []).append(parent)
+    # if we get results from Python server no aggregation is required
+    if len(parents) == 0:
+        return results
+    # if we got results from GO server we need to perform aggregation of results based on file/run pair
+    for lfn in parents.keys():
+        rec = {'logical_file_name': lfn, 'parent_logical_file_name': parents[lfn]}
+        output.append(rec)
+    return output
+
+def aggFileChildren(results):
+    """
+    performs FileChildren API aggregation
+
+    :param: results: list JSON records
+    :type: list
+    :return: aggregated list of JSON records
+    """
+    output = []
+    children = {}
+    for rec in results:
+        lfn = rec['logical_file_name']
+        child = rec['child_logical_file_name']
+        if isinstance(child, list):
+            break
+        children.setdefault(lfn, []).append(child)
+    # if we get results from Python server no aggregation is required
+    if len(children) == 0:
+        return results
+    # if we got results from GO server we need to perform
+    # aggregation of results based on file/run pair
+    for lfn in children.keys():
+        rec = {'logical_file_name': lfn, 'child_logical_file_name': children[lfn]}
+        output.append(rec)
+    return output
+
 def slicedIterator(sourceList, sliceSize):
     """
     :param: sourceList: list which need to be sliced
@@ -138,7 +302,7 @@ def split_calls(func):
 
 class DbsApi(object):
     #added CAINFO and userAgent (see github issue #431 & #432)
-    def __init__(self, url="", proxy=None, key=None, cert=None, verifypeer=True, debug=0, ca_info=None, userAgent="", port=8443):
+    def __init__(self, url="", proxy=None, key=None, cert=None, verifypeer=True, debug=0, ca_info=None, userAgent="", port=8443, accept="application/json", aggregate=True):
         """
         DbsApi Constructor
 
@@ -165,11 +329,13 @@ class DbsApi(object):
         self.key = key
         self.cert = cert
         self.userAgent = userAgent
+        self.accept = accept
+        self.aggregate = aggregate
 
         self.rest_api = RestApi(auth=X509Auth(ssl_cert=cert, ssl_key=key, ssl_verifypeer=verifypeer, ca_info=ca_info),
                                 proxy=Socks5Proxy(proxy_url=self.proxy) if self.proxy else None)
 
-    def __callServer(self, method="", params={}, data={}, callmethod='GET', content='application/json'):
+    def __callServer(self, method="", params={}, data={}, callmethod='GET', content='application/json', aggFunc=None):
         """
         A private method to make HTTP call to the DBS Server
 
@@ -190,7 +356,8 @@ class DbsApi(object):
             UserAgent = "DBSClient/"+os.environ['DBS3_CLIENT_VERSION']+"/"+ self.userAgent
         except:
             UserAgent = "DBSClient/Unknown"+"/"+ self.userAgent
-        request_headers =  {"Content-Type": content, "Accept": content, "UserID": UserID, "User-Agent":UserAgent }
+
+        request_headers = {"Content-Type": content, "Accept": self.accept, "UserID": UserID, "User-Agent":UserAgent}
 
         method_func = getattr(self.rest_api, callmethod.lower())
 
@@ -201,7 +368,9 @@ class DbsApi(object):
         except HTTPError as http_error:
             self.__parseForException(http_error)
 
-        if content != "application/json":
+        if self.accept == "application/ndjson":
+            return parseStream(self.http_response.body)
+        if self.accept != "application/json":
             return self.http_response.body
 
         try:
@@ -209,6 +378,9 @@ class DbsApi(object):
         except ValueError as ex:
             print("The server output is not a valid json, most probably you have a typo in the url.\n%s.\n" % self.url, file=sys.stderr)
             raise dbsClientException("Invalid url", "Possible urls are %s" %self.http_response.body)
+
+        if self.aggregate and aggFunc:
+            return aggFunc(json_ret)
 
         return json_ret
 
@@ -810,7 +982,7 @@ class DbsApi(object):
 
         checkInputParameter(method="listDatasetAccessTypes", parameters=list(kwargs.keys()), validParameters=validParameters)
 
-        return self.__callServer("datasetaccesstypes", params=kwargs)
+        return self.__callServer("datasetaccesstypes", params=kwargs, aggFunc=aggFileChildren)
 
     def listDatasetArray(self, **kwargs):
         """
@@ -974,7 +1146,7 @@ class DbsApi(object):
         checkInputParameter(method="listFileLumis", parameters=list(kwargs.keys()), validParameters=validParameters,
                             requiredParameters=requiredParameters)
 
-        return self.__callServer("filelumis", params=kwargs)
+        return self.__callServer("filelumis", params=kwargs, aggFunc=aggFileLumis)
 
     def listFileLumiArray(self, **kwargs):
         """
@@ -1037,7 +1209,7 @@ class DbsApi(object):
         checkInputParameter(method="listFileParents", parameters=list(kwargs.keys()), validParameters=validParameters,
                             requiredParameters=requiredParameters)
 
-        return self.__callServer("fileparents", params=kwargs)
+        return self.__callServer("fileparents", params=kwargs, aggFunc=aggFileParents)
 
     def listFiles_doc(self, **kwargs):
         """
@@ -1490,7 +1662,7 @@ class DbsApi(object):
         checkInputParameter(method="listRuns", parameters=list(kwargs.keys()), validParameters=validParameters,
                             requiredParameters=requiredParameters)
 
-        return self.__callServer("runs", params=kwargs)
+        return self.__callServer("runs", params=kwargs, aggFunc=aggRuns)
 
     def listRunSummaries(self, **kwargs):
         """
