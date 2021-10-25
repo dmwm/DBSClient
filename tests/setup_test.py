@@ -106,9 +106,9 @@ class TestCommand(Command):
         self.insert = None
         self.cmsweb_testbed = None
         self.host = None
-        self.reader = None
-        self.writer = None
-        self.migrate = None
+        self.reader = ""
+        self.writer = ""
+        self.migrate = ""
 
     def finalize_options(self):
         #Check if environment us set-up correctly
@@ -145,18 +145,21 @@ class TestCommand(Command):
                         'https://cmsweb.cern.ch': 'prod/test'}
 
         ###set environment
-        os.environ['DBS_READER_URL'] = ("%s/dbs/%s/DBSReader") % (self.host, db_instances.get(self.host, 'dev/global'))
-        os.environ['DBS_WRITER_URL'] = ("%s/dbs/%s/DBSWriter") % (self.host, db_instances.get(self.host, 'dev/global'))
-        os.environ['DBS_MIGRATE_URL'] = ("%s/dbs/%s/DBSMigrate") % (self.host,
-                                                                    db_instances.get(self.host, 'dev/global'))
         
         # if user provide specific reader/writer/migrate url we'll use them
         if self.reader != "":
             os.environ['DBS_READER_URL'] = self.reader
+        else:
+            os.environ['DBS_READER_URL'] = ("%s/dbs/%s/DBSReader") % (self.host, db_instances.get(self.host, 'dev/global'))
         if self.writer != "":
             os.environ['DBS_WRITER_URL'] = self.writer
+        else:
+            os.environ['DBS_WRITER_URL'] = ("%s/dbs/%s/DBSWriter") % (self.host, db_instances.get(self.host, 'dev/global'))
         if self.migrate != "":
             os.environ['DBS_MIGRATE_URL'] = self.migrate
+        else:
+            os.environ['DBS_MIGRATE_URL'] = ("%s/dbs/%s/DBSMigrate") % (self.host,
+                                                                        db_instances.get(self.host, 'dev/global'))
 
         if self.cmsweb_testbed:
             self.unitall, self.validation, self.deployment = (True, True, True)
