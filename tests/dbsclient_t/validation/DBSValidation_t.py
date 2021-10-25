@@ -120,7 +120,7 @@ class DBSValidation_t(unittest.TestCase):
                  'output_module_label': output_module_label, 'global_tag' : global_tag},
                 ],
             'xtcrosssection': 123, 'primary_ds_type': 'test', 'data_tier_name': tier,
-            'creation_date': 1234, 'create_by': 'anzar', "last_modification_date": 1234, "last_modified_by": "anzar",
+            'creation_date': 1635177605, 'create_by': 'anzar', "last_modification_date": 1635177605, "last_modified_by": "anzar",
             'processing_version': processing_version,  'acquisition_era_name': acquisition_era_name,
             }
         self.api.insertDataset(datasetObj=data)
@@ -196,7 +196,7 @@ class DBSValidation_t(unittest.TestCase):
                  'output_module_label': output_module_label, 'global_tag': global_tag},
                 ],
             'xtcrosssection': 123, 'primary_ds_type': 'test', 'data_tier_name': tier,
-            'creation_date': 1234, 'create_by': 'anzar', "last_modification_date": 1234, "last_modified_by": "anzar",
+            'creation_date': 1635177605, 'create_by': 'anzar', "last_modification_date": 1635177605, "last_modified_by": "anzar",
             'processing_version': processing_version,  'acquisition_era_name': acquisition_era_name,
             }
         self.api.insertDataset(datasetObj=data)
@@ -211,15 +211,15 @@ class DBSValidation_t(unittest.TestCase):
             f={
                 'adler32': 'NOTSET', 'file_type': 'EDM',
                 'dataset': dataset_parent,
-                'file_size': '201221191', 'auto_cross_section': 0.0,
+                'file_size': 201221191, 'auto_cross_section': 0.0,
                 'check_sum': '1504266448',
-                'event_count': '1619',
+                'event_count': 1619,
                 'logical_file_name': "/store/mc/Fall08/BBJets250to500-madgraph/GEN-SIM-RAW/IDEAL_/%s/parent_%i.root" %(uid, i),
                 'block_name': block_parent,
                 'file_lumi_list': [
-                    {'lumi_section_num': '27414', 'run_num': '1'},
-                    {'lumi_section_num': '26422', 'run_num': '1'},
-                    {'lumi_section_num': '29838', 'run_num': '1'}
+                    {'lumi_section_num': 27414, 'run_num': 1},
+                    {'lumi_section_num': 26422, 'run_num': 1},
+                    {'lumi_section_num': 29838, 'run_num': 1}
                     ]
                 }
             pflist.append(f)
@@ -234,15 +234,15 @@ class DBSValidation_t(unittest.TestCase):
                      'output_module_label': output_module_label, 'global_tag': global_tag},
                     ],
                 'dataset': dataset,
-                'file_size': '201221191', 'auto_cross_section': 0.0,
+                'file_size': 201221191, 'auto_cross_section': 0.0,
                 'check_sum': '1504266448',
                 'file_lumi_list': [
-                    {'lumi_section_num': '27414', 'run_num': '1'},
-                    {'lumi_section_num': '26422', 'run_num': '1'},
-                    {'lumi_section_num': '29838', 'run_num': '1'}
+                    {'lumi_section_num': 27414, 'run_num': 1},
+                    {'lumi_section_num': 26422, 'run_num': 1},
+                    {'lumi_section_num': 29838, 'run_num': 1}
                     ],
                 'file_parent_list': [ {"file_parent_lfn" : "/store/mc/Fall08/BBJets250to500-madgraph/GEN-SIM-RAW/IDEAL_/%s/parent_%i.root" %(uid, i)} ],
-                'event_count': '1619',
+                'event_count': 1619,
                 'logical_file_name': "/store/mc/Fall08/BBJets250to500-madgraph/GEN-SIM-RAW/IDEAL_/%s/%i.root" %(uid, i),
                 'block_name': block
                 #'is_file_valid': 1
