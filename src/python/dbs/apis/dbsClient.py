@@ -174,6 +174,20 @@ def aggFileChildren(results):
         output.append(rec)
     return output
 
+def aggFileParentsByLumi(results):
+    """
+    performs fileparentsbylumi API aggregation
+
+    :param: results: list JSON records
+    :type: list
+    :return: aggregated list of JSON records
+    """
+    ids = []
+    for rec in results:
+        ids.append([rec['cid'], rec['pid']])
+    return [{'child_parent_id_list': ids}]
+
+
 def slicedIterator(sourceList, sliceSize):
     """
     :param: sourceList: list which need to be sliced
@@ -690,7 +704,7 @@ class DbsApi(object):
         requiredParameters = {'forced': ['block_name']}
         checkInputParameter(method="listFileParentsByLumi", parameters=list(kwargs.keys()), validParameters=validParameters,
                             requiredParameters=requiredParameters)
-        return self.__callServer("fileparentsbylumi", data=kwargs, callmethod='POST')
+        return self.__callServer("fileparentsbylumi", data=kwargs, callmethod='POST', aggFunc=aggFileParentsByLumi)
 
 
     def listApiDocumentation(self):

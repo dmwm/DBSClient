@@ -8,7 +8,7 @@ import unittest
 
 from dbs.apis.dbsClient import parseStream, aggAttribute, \
         aggRuns, aggReleaseVersions, aggDatasetAccessTypes, \
-        aggFileLumis, aggFileParents, aggFileChildren
+        aggFileLumis, aggFileParents, aggFileChildren, aggFileParentsByLumi
 
 class DBSClientReaderGo_t(unittest.TestCase):
 
@@ -85,6 +85,13 @@ class DBSClientReaderGo_t(unittest.TestCase):
             {"logical_file_name":"lfn1", "child_logical_file_name": ["child1", "child2"]},
             {"logical_file_name":"lfn2", "child_logical_file_name": ["child3"]}
         ]
+        self.assertTrue(results, expect)
+
+    def testiAggFileParentsByLumi(self):
+        """test aggFileParentsByLumi function"""
+        data = [{'cid':1, 'pid': 1}, {'cid':2, 'pid':2}]
+        results = aggFileParentsByLumi(data)
+        expect = [{'child_parent_id_list': [[1,1], [2,2]]}]
         self.assertTrue(results, expect)
 
 if __name__ == "__main__":
