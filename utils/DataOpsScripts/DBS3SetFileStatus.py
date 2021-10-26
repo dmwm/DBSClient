@@ -57,16 +57,16 @@ def isChildrenValid(files=[], blocks=[], pstatus=0):
     while child:
         c = child.pop()
         allfiles.append(c)
-	fc = listFileChildren(files=c)
-	for cc in fc:
-	    child.extend(cc)
+        fc = listFileChildren(files=c)
+        for cc in fc:
+            child.extend(cc)
 
     while childb :
         b = childb.pop()
         allblocks.append(b)
-	bc = listBlockChildren(b)
-	for bb in bc:
-	    childb.extend(bb)
+        bc = listBlockChildren(b)
+        for bb in bc:
+            childb.extend(bb)
 
     return isFileValid(files=allfiles, blocks=allblocks, fstatus=pstatus)
 
@@ -153,5 +153,5 @@ def main():
     logging.info("All done")
 
 if __name__ == "__main__":
-  main()
+    main()
 

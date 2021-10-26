@@ -14,7 +14,7 @@ class DBSDataProvider(object):
         #set starting values for the run number and lumi section to avoid duplicated entries in a block
         self._run_num  = random.randint(1, 100)
         self._lumi_sec = random.randint(1, 100)
-        self._event_count = random.randint(1, 100) 
+        self._event_count = random.randint(1, 100)
 
         self._files = {}
 
@@ -299,7 +299,7 @@ class DBSDataProvider(object):
     def processing_version(self):
         "return processing version"
         if not hasattr(self, '_processing_version'):
-	    #avoid the same number as in the block dump file.	
+            #avoid the same number as in the block dump file.
             self._processing_version = random.randint(100, 1000)
         return self._processing_version
 
