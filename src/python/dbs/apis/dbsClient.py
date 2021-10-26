@@ -331,6 +331,7 @@ class DbsApi(object):
         self.userAgent = userAgent
         self.accept = accept
         self.aggregate = aggregate
+        self.debug = debug
 
         self.rest_api = RestApi(auth=X509Auth(ssl_cert=cert, ssl_key=key, ssl_verifypeer=verifypeer, ca_info=ca_info),
                                 proxy=Socks5Proxy(proxy_url=self.proxy) if self.proxy else None)
@@ -364,6 +365,8 @@ class DbsApi(object):
         data = json.dumps(data)
 
         try:
+            if self.debug:
+                print("HTTP={} URL={} method={} params={} data={} headers={}".format(callmethod, self.url, method, params, data, request_headers))
             self.http_response = method_func(self.url, method, params, data, request_headers)
         except HTTPError as http_error:
             self.__parseForException(http_error)
@@ -982,7 +985,7 @@ class DbsApi(object):
 
         checkInputParameter(method="listDatasetAccessTypes", parameters=list(kwargs.keys()), validParameters=validParameters)
 
-        return self.__callServer("datasetaccesstypes", params=kwargs, aggFunc=aggFileChildren)
+        return self.__callServer("datasetaccesstypes", params=kwargs, aggFunc=aggDatasetAccessTypes)
 
     def listDatasetArray(self, **kwargs):
         """

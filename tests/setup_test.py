@@ -87,6 +87,7 @@ class TestCommand(Command):
                    ('reader=', None, 'DBSReader url (used in writer tests)'),
                    ('writer=', None, 'DBSWriter url (used in writer tests)'),
                    ('migrate=', None, 'DBS migrate url (used in migrate tests)'),
+                   ('debug=', None, 'turn on debug info'),
                    ('host=', None, 'Host to run unittests')]
 
     description = """Test DBS3 Client using provided unittests, possible options are\n
@@ -95,6 +96,10 @@ class TestCommand(Command):
                   --validation to run client validation tests\n
                   --deployment to run client deployment tests\n
                   --insert data during client deployment tests\n
+                  --reader use custom DBSReader URL\n
+                  --writer use custom DBSWriter URL\n
+                  --migrate use custom DBS migrate URL\n
+                  --debug specify debug level\n
                   --cmsweb-testbed to run standardized cmsweb-testbed validation tests\n
                   --host= to run unittests"""
 
@@ -109,6 +114,7 @@ class TestCommand(Command):
         self.reader = ""
         self.writer = ""
         self.migrate = ""
+        self.debug = 0
 
     def finalize_options(self):
         #Check if environment us set-up correctly
@@ -160,6 +166,8 @@ class TestCommand(Command):
         else:
             os.environ['DBS_MIGRATE_URL'] = ("%s/dbs/%s/DBSMigrate") % (self.host,
                                                                         db_instances.get(self.host, 'dev/global'))
+        if self.debug:
+            os.environ['DBS_DEBUG'] = "1"
 
         if self.cmsweb_testbed:
             self.unitall, self.validation, self.deployment = (True, True, True)
