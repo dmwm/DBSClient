@@ -8,7 +8,8 @@ import unittest
 
 from dbs.apis.dbsClient import parseStream, aggAttribute, \
         aggRuns, aggReleaseVersions, aggDatasetAccessTypes, \
-        aggFileLumis, aggFileParents, aggFileChildren, aggFileParentsByLumi
+        aggFileLumis, aggFileParents, aggFileChildren, \
+        aggFileParentsByLumi, aggParentDSTrio
 
 class DBSClientReaderGo_t(unittest.TestCase):
 
@@ -92,6 +93,40 @@ class DBSClientReaderGo_t(unittest.TestCase):
         data = [{'cid':1, 'pid': 1}, {'cid':2, 'pid':2}]
         results = aggFileParentsByLumi(data)
         expect = [{'child_parent_id_list': [[1,1], [2,2]]}]
+        self.assertTrue(results, expect)
+
+    def testiAggParentDSTrio(self):
+        """test aggParentDSTrio function"""
+        data=[
+            {"l":29838,"pfid":653591317,"r":98}
+            ,{"l":26422,"pfid":653591317,"r":98}
+            ,{"l":27414,"pfid":653591317,"r":98}
+            ,{"l":27415,"pfid":653591318,"r":98}
+            ,{"l":26423,"pfid":653591318,"r":98}
+            ,{"l":29839,"pfid":653591318,"r":98}
+            ,{"l":26424,"pfid":653591319,"r":98}
+            ,{"l":29840,"pfid":653591319,"r":98}
+            ,{"l":27416,"pfid":653591319,"r":98}
+            ,{"l":27417,"pfid":653591320,"r":98}
+            ,{"l":26425,"pfid":653591320,"r":98}
+            ,{"l":29841,"pfid":653591320,"r":98}
+            ,{"l":27418,"pfid":653591321,"r":98}
+            ,{"l":26426,"pfid":653591321,"r":98}
+            ,{"l":29842,"pfid":653591321,"r":98}
+        ]
+
+        expect = [
+            {653591317: [[98, 29838], [98, 26422], [98, 27414]]}
+            ,
+            {653591318: [[98, 27415], [98, 26423], [98, 29839]]}
+            ,
+            {653591319: [[98, 26424], [98, 29840], [98, 27416]]}
+            ,
+            {653591320: [[98, 27417], [98, 26425], [98, 29841]]}
+            ,
+            {653591321: [[98, 27418], [98, 26426], [98, 29842]]}
+        ]
+        results = aggParentDSTrio(data)
         self.assertTrue(results, expect)
 
 if __name__ == "__main__":
