@@ -55,11 +55,12 @@ class DBSValidation_t(unittest.TestCase):
             self.setUpClass()
         url = os.environ['DBS_WRITER_URL']
         proxy = os.environ.get('SOCKS5_PROXY')
-        self.api = DbsApi(url=url, proxy=proxy)
+        debug = os.environ.get('DBS_DEBUG')
+        self.api = DbsApi(url=url, proxy=proxy, debug=debug)
         migration_url = os.environ['DBS_MIGRATE_URL']
-        self.migration_api = DbsApi(url=migration_url, proxy=proxy)
+        self.migration_api = DbsApi(url=migration_url, proxy=proxy, debug=debug)
         self.source_url='https://cmsweb.cern.ch:8443/dbs/prod/global/DBSReader'
-        self.cmsweb_api = DbsApi(url=self.source_url, proxy=proxy)
+        self.cmsweb_api = DbsApi(url=self.source_url, proxy=proxy, debug=debug)
         self.cmswebtestbed_api = DbsApi(url='https://cmsweb-testbed.cern.ch/dbs/int/global/DBSReader', proxy=proxy)
 
     def setUp(self):
