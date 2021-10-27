@@ -28,7 +28,8 @@ class DBSClientBlockWriter_t(unittest.TestCase):
             self.setUpClass()
         url=os.environ['DBS_WRITER_URL']
         proxy=os.environ.get('SOCKS5_PROXY')
-        self.api = DbsApi(url=url, proxy=proxy)
+        debug = os.environ.get('DBS_DEBUG')
+        self.api = DbsApi(url=url, proxy=proxy, debug=debug)
 
     @classmethod
     def setUpClass(cls):

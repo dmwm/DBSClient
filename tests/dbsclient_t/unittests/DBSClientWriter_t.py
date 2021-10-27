@@ -82,7 +82,8 @@ class DBSClientWriter_t(unittest.TestCase):
         super(DBSClientWriter_t, self).__init__(methodName)
         url=os.environ['DBS_WRITER_URL']
         proxy=os.environ.get('SOCKS5_PROXY')
-        self.api = DbsApi(url=url, proxy=proxy)
+        debug = os.environ.get('DBS_DEBUG')
+        self.api = DbsApi(url=url, proxy=proxy, debug=debug)
 
     def setUp(self):
         """setup all necessary parameters"""
