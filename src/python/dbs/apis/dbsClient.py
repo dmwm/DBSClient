@@ -187,6 +187,19 @@ def aggFileParentsByLumi(results):
         ids.append([rec['cid'], rec['pid']])
     return [{'child_parent_id_list': ids}]
 
+def aggParentDSTrio(results):
+    """
+    performs parentDSTrio API aggregation
+
+    :param: results: list JSON records
+    :type: list
+    :return: aggregated list of JSON records
+    """
+    rdict = {}
+    for row in results:
+        pfid = row['pfid']
+        rdict.setdefault(pfid, []).append([row['r'], row['l']])
+    return rdict
 
 def slicedIterator(sourceList, sliceSize):
     """
@@ -669,7 +682,7 @@ class DbsApi(object):
         requiredParameters = {'forced': ['dataset']}
         checkInputParameter(method="listParentDSTrio", parameters=list(kwargs.keys()), validParameters=validParameters,
                             requiredParameters=requiredParameters)
-        return self.__callServer("parentDSTrio", params=kwargs, callmethod='GET')
+        return self.__callServer("parentDSTrio", params=kwargs, callmethod='GET', aggFunc=aggParentDSTrio)
 
     def listBlockTrio(self, **kwargs):
         """
