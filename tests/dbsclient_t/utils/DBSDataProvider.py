@@ -86,7 +86,7 @@ class DBSDataProvider(object):
 
     def _generate_adler32(self):
         "generates adler32 checksum"
-        return random.randint(1000, 9999)
+        return str(random.randint(1000, 9999))
 
     def _generate_auto_cross_section(self):
         "generate auto cross section for a given file, if not already available"
@@ -105,7 +105,7 @@ class DBSDataProvider(object):
 
     def _generate_cksum(self):
         "generates checksum"
-        return random.randint(1000, 9999)
+        return str(random.randint(1000, 9999))
 
     def _generate_event_count(self):
         "generate event count for a given file, if not already available"
