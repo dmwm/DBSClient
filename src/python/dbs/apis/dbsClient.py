@@ -199,6 +199,8 @@ def aggParentDSTrio(results):
     """
     rdict = {}
     for row in results:
+        if 'pfid' not in row:
+            return results
         pfid = row['pfid']
         rdict.setdefault(pfid, []).append([row['r'], row['l']])
     return rdict
