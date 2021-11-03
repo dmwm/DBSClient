@@ -317,17 +317,16 @@ class DBSValidation_t(unittest.TestCase):
         input_block_dump = self.data_provider.block_dump()[0]
         self.api.insertBulkBlock(input_block_dump)
         block_dump = self.api.blockDump(block_name=input_block_dump['block']['block_name'])
-        """
-        print("****************************************************************test11")
-        import pprint
-        print("input_block_dump")
-        pp = pprint.PrettyPrinter(indent=4)
-        pp.pprint(input_block_dump)
-        print("######################")
-        print("block_dump")
-        pp.pprint(block_dump)
-        print("****************************************************************")
-        """
+        if self.debug:
+            print("****************************************************************test11")
+            import pprint
+            print("input_block_dump")
+            pp = pprint.PrettyPrinter(indent=4)
+            pp.pprint(input_block_dump)
+            print("######################")
+            print("block_dump")
+            pp.pprint(block_dump)
+            print("****************************************************************")
         def check(input, output):
             if isinstance(input, dict):
                 for key, value in input.items():
@@ -351,7 +350,17 @@ class DBSValidation_t(unittest.TestCase):
                         print("--------output description--------")
                         print(output[key])
                     """
+                    if key not in output:
+                        if self.degug:
+                            print("no %s found in output" % key)
                     self.assertTrue(key in output)
+                    if not output[key]:
+                        if self.debug:
+                            print("no values for %s" % key)
+                        if value:
+                            if self.debug:
+                                print("key %s has valut %s in input data" % (key, value))
+#                                 self.assertEqual(value, output[key])
                     if key == "file_lumi_list":
                         output[key].sort(key=lambda x: x.get('lumi_section_num'))
                         value.sort(key=lambda x: x.get('lumi_section_num'))
@@ -373,8 +382,16 @@ class DBSValidation_t(unittest.TestCase):
 
                     check(value, output[key])
             elif isinstance(input, list):
+                if not isinstance(output, list):
+                    if self.debug:
+                        print("wrong data-type %s, we expect a list" % type(output))
+                    if input:
+                        self.assertEqual(input, output)
                 for element_in, element_out in zip(sorted(input, key=lambda x: [x.keys() if isinstance(x, dict) else str(x)]), sorted(output, key=lambda x: [x.keys() if isinstance(x, dict) else str(x)])):
                     check(element_in, element_out)
+            elif not input and not output:
+                if self.debug:
+                    print("no input '%s' and output '%s' values are provided" % (input, output))
             else:
                 self.assertEqual(str(input), str(output))
 
