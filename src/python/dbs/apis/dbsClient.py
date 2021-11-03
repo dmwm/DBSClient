@@ -184,6 +184,8 @@ def aggFileParentsByLumi(results):
     """
     ids = []
     for rec in results:
+        if 'cid' not in rec:
+            return results
         ids.append([rec['cid'], rec['pid']])
     return [{'child_parent_id_list': ids}]
 
