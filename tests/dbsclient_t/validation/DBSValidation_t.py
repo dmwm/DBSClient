@@ -55,12 +55,12 @@ class DBSValidation_t(unittest.TestCase):
             self.setUpClass()
         url = os.environ['DBS_WRITER_URL']
         proxy = os.environ.get('SOCKS5_PROXY')
-        debug = os.environ.get('DBS_DEBUG')
-        self.api = DbsApi(url=url, proxy=proxy, debug=debug)
+        self.debug = os.environ.get('DBS_DEBUG')
+        self.api = DbsApi(url=url, proxy=proxy, debug=self.debug)
         migration_url = os.environ['DBS_MIGRATE_URL']
-        self.migration_api = DbsApi(url=migration_url, proxy=proxy, debug=debug)
+        self.migration_api = DbsApi(url=migration_url, proxy=proxy, debug=self.debug)
         self.source_url='https://cmsweb.cern.ch:8443/dbs/prod/global/DBSReader'
-        self.cmsweb_api = DbsApi(url=self.source_url, proxy=proxy, debug=debug)
+        self.cmsweb_api = DbsApi(url=self.source_url, proxy=proxy, debug=self.debug)
         self.cmswebtestbed_api = DbsApi(url='https://cmsweb-testbed.cern.ch/dbs/int/global/DBSReader', proxy=proxy)
 
     def setUp(self):
@@ -387,6 +387,8 @@ class DBSValidation_t(unittest.TestCase):
                         print("wrong data-type %s, we expect a list" % type(output))
                     if input:
                         self.assertEqual(input, output)
+                    if not output:
+                        output = [] # if output is None/null we need it as list for operation below
                 for element_in, element_out in zip(sorted(input, key=lambda x: [x.keys() if isinstance(x, dict) else str(x)]), sorted(output, key=lambda x: [x.keys() if isinstance(x, dict) else str(x)])):
                     check(element_in, element_out)
             elif not input and not output:
