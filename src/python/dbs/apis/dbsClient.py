@@ -219,14 +219,15 @@ class DbsApi(object):
         :param httperror: Thrown httperror by the server
         """
         data = http_error.body
+        if type(data) == str and str(data).find("<html>")!=-1 and str(data).find("</html>")!=-1:
+            raise http_error
         try:
             data = json.loads(data)
+            # re-raise with more detail
+            if isinstance(data, dict) and 'exception' in data:
+                raise HTTPError(http_error.url, data['exception'], data['message'], http_error.header, http_error.body)
         except:
             raise http_error
-
-        if isinstance(data, dict) and 'exception' in data:# re-raise with more details
-            raise HTTPError(http_error.url, data['exception'], data['message'], http_error.header, http_error.body)
-
         raise http_error
 
     @property
