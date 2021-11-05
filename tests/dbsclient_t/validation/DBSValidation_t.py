@@ -362,22 +362,28 @@ class DBSValidation_t(unittest.TestCase):
                                 print("key %s has valut %s in input data" % (key, value))
 #                                 self.assertEqual(value, output[key])
                     if key == "file_lumi_list":
-                        output[key].sort(key=lambda x: x.get('lumi_section_num'))
+                        if isinstance(output[key], list):
+                            output[key].sort(key=lambda x: x.get('lumi_section_num'))
                         value.sort(key=lambda x: x.get('lumi_section_num'))
                     elif key == "dataset_conf_list":
-                        output[key].sort(key=lambda x: x.get('output_module_label') + str(x.get('creation_date')))
+                        if isinstance(output[key], list):
+                            output[key].sort(key=lambda x: x.get('output_module_label') + str(x.get('creation_date')))
                         value.sort(key=lambda x: x.get('output_module_label') + str(x.get('creation_date')))
                     elif key == "file_parent_list":
-                        output[key].sort(key=lambda x: x.get('parent_logical_file_name') + x.get('this_logical_file_name'))
+                        if isinstance(output[key], list):
+                            output[key].sort(key=lambda x: x.get('parent_logical_file_name') + x.get('this_logical_file_name'))
                         value.sort(key=lambda x: x.get('parent_logical_file_name') + x.get('this_logical_file_name'))
                     elif key == "file_conf_list":
-                        output[key].sort(key=lambda x: x.get('lfn'))
+                        if isinstance(output[key], list):
+                            output[key].sort(key=lambda x: x.get('lfn'))
                         value.sort(key=lambda x: x.get('lfn'))
                     elif key == "files":
-                        output[key].sort(key=lambda x: x.get('logical_file_name'))
+                        if isinstance(output[key], list):
+                            output[key].sort(key=lambda x: x.get('logical_file_name'))
                         value.sort(key=lambda x: x.get('logical_file_name'))
                     elif key == "block_parent_list":
-                        output[key].sort(key=lambda x: x.get('parent_block_name'))
+                        if isinstance(output[key], list):
+                            output[key].sort(key=lambda x: x.get('parent_block_name'))
                         value.sort(key=lambda x: x.get('parent_block_name'))
 
                     check(value, output[key])
