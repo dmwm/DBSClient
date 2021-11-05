@@ -407,6 +407,9 @@ class DbsApi(object):
         if self.accept != "application/json":
             return self.http_response.body
 
+        if self.http_response.code != 200:
+            return {'code':self.http_response.code, 'body': self.http_response.body, 'method': callmethod, 'url': self.url, 'api': method}
+
         try:
             json_ret=json.loads(self.http_response.body)
         except ValueError as ex:
@@ -424,6 +427,12 @@ class DbsApi(object):
 
         :param httperror: Thrown httperror by the server
         """
+        print("### HTTPError ###")
+        print("URL: %s" % http_error.url)
+        print("HTTP code: %s" % http_error.code)
+        print("HTTP Message: %s" % http_error.msg)
+        print("HTTP Header: %s" % http_error.header)
+        print("HTTP Body\n%s" % http_error.body)
         data = http_error.body
         try:
             data = json.loads(data)
