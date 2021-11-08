@@ -10,6 +10,201 @@ import socket
 import sys
 import urllib.request, urllib.parse, urllib.error
 
+def parseStream(results):
+    """
+    Parse given stream of results
+
+    :param: results: list JSON records
+    :type: list
+    :return: generator of JSON records
+    """
+    for rec in results.split('\n'):
+        if rec:
+            yield json.loads(rec)
+
+def aggAttribute(results, attr):
+    """
+    performs aggregation based on given attribute
+
+    :param: results: list JSON records
+    :type: list
+    :param: attr is name of the attribute in JSON record, e.g. run_num
+    :type: string
+    :return: aggregated list of JSON records
+    """
+    rows = []
+    for row in results:
+        if attr in row and not isinstance(row[attr], list):
+            rows.append(row[attr])
+    if len(rows) > 0:
+        return [{attr: rows}]
+    return results
+
+def aggRuns(results):
+    """
+    performs runs API aggregation
+
+    :param: results: list JSON records
+    :type: list
+    :return: aggregated list of JSON records
+    """
+    return aggAttribute(results, 'run_num')
+
+def aggReleaseVersions(results):
+    """
+    performs release version API aggregation
+
+    :param: results: list JSON records
+    :type: list
+    :return: aggregated list of JSON records
+    """
+    return aggAttribute(results, 'release_version')
+
+def aggDatasetAccessTypes(results):
+    """
+    performs dataset access types API aggregation
+
+    :param: results: list JSON records
+    :type: list
+    :return: aggregated list of JSON records
+    """
+    return aggAttribute(results, 'dataset_access_type')
+
+def aggFileLumis(results):
+    """
+    performs filelumis API aggregation
+
+    :param: results: list JSON records
+    :type: list
+    :return: aggregated list of JSON records
+    """
+    output = []
+    file_run_lumi = {}
+    event_ct = False
+    if results and 'event_count' in results[0]:
+        event_ct = True
+    for rec in results:
+        run = rec['run_num']
+        lfn = rec['logical_file_name']
+        lumi = rec['lumi_section_num']
+        if isinstance(lumi, list):
+            break
+        if event_ct:
+            file_run_lumi.setdefault((lfn, run), []).append(
+                    [rec['lumi_section_num'], rec['event_count']])
+        else:
+            file_run_lumi.setdefault((lfn, run), []).append(
+                    rec['lumi_section_num'])
+    # if we get results from Python server no aggregation is required
+    if len(file_run_lumi) == 0:
+        return results
+    # if we got results from GO server we need to perform
+    # aggregation of results based on file/run pair
+    for key in file_run_lumi.keys():
+        val = file_run_lumi[key]
+        if event_ct:
+            lumi=[]
+            event=[]
+            for item in val:
+                lumi.append(item[0])
+                event.append(item[1])
+            rec = {
+                    'logical_file_name':key[0],
+                    'run_num':key[1],
+                    'lumi_section_num':lumi,
+                    'event_count':event
+            }
+        else:
+            rec = {
+                    'logical_file_name':key[0],
+                    'run_num':key[1],
+                    'lumi_section_num':val
+            }
+        output.append(rec)
+    return output
+
+def aggFileParents(results):
+    """
+    performs FileParents API aggregation
+
+    :param: results: list JSON records
+    :type: list
+    :return: aggregated list of JSON records
+    """
+    output = []
+    parents = {}
+    for rec in results:
+        lfn = rec['logical_file_name']
+        parent = rec['parent_logical_file_name']
+        if isinstance(parent, list):
+            break
+        parents.setdefault(lfn, []).append(parent)
+    # if we get results from Python server no aggregation is required
+    if len(parents) == 0:
+        return results
+    # if we got results from GO server we need to perform aggregation of results based on file/run pair
+    for lfn in parents.keys():
+        rec = {'logical_file_name': lfn, 'parent_logical_file_name': parents[lfn]}
+        output.append(rec)
+    return output
+
+def aggFileChildren(results):
+    """
+    performs FileChildren API aggregation
+
+    :param: results: list JSON records
+    :type: list
+    :return: aggregated list of JSON records
+    """
+    output = []
+    children = {}
+    for rec in results:
+        lfn = rec['logical_file_name']
+        child = rec['child_logical_file_name']
+        if isinstance(child, list):
+            break
+        children.setdefault(lfn, []).append(child)
+    # if we get results from Python server no aggregation is required
+    if len(children) == 0:
+        return results
+    # if we got results from GO server we need to perform
+    # aggregation of results based on file/run pair
+    for lfn in children.keys():
+        rec = {'logical_file_name': lfn, 'child_logical_file_name': children[lfn]}
+        output.append(rec)
+    return output
+
+def aggFileParentsByLumi(results):
+    """
+    performs fileparentsbylumi API aggregation
+
+    :param: results: list JSON records
+    :type: list
+    :return: aggregated list of JSON records
+    """
+    ids = []
+    for rec in results:
+        if 'cid' not in rec:
+            return results
+        ids.append([rec['cid'], rec['pid']])
+    return [{'child_parent_id_list': ids}]
+
+def aggParentDSTrio(results):
+    """
+    performs parentDSTrio API aggregation
+
+    :param: results: list JSON records
+    :type: list
+    :return: aggregated list of JSON records
+    """
+    rdict = {}
+    for row in results:
+        if 'pfid' not in row:
+            return results
+        pfid = row['pfid']
+        rdict.setdefault(pfid, []).append([row['r'], row['l']])
+    return rdict
+
 def slicedIterator(sourceList, sliceSize):
     """
     :param: sourceList: list which need to be sliced
@@ -138,7 +333,7 @@ def split_calls(func):
 
 class DbsApi(object):
     #added CAINFO and userAgent (see github issue #431 & #432)
-    def __init__(self, url="", proxy=None, key=None, cert=None, verifypeer=True, debug=0, ca_info=None, userAgent="", port=8443):
+    def __init__(self, url="", proxy=None, key=None, cert=None, verifypeer=True, debug=0, ca_info=None, userAgent="", port=8443, accept="application/json", aggregate=True):
         """
         DbsApi Constructor
 
@@ -151,7 +346,7 @@ class DbsApi(object):
         :param cert: full path to the certificate to use
         :type cert: str
         :param port: server port
-        :type port int 
+        :type port int
 
         .. note::
            By default the DbsApi is trying to lookup the private key and the certificate in the common locations
@@ -165,11 +360,14 @@ class DbsApi(object):
         self.key = key
         self.cert = cert
         self.userAgent = userAgent
+        self.accept = accept
+        self.aggregate = aggregate
+        self.debug = debug
 
         self.rest_api = RestApi(auth=X509Auth(ssl_cert=cert, ssl_key=key, ssl_verifypeer=verifypeer, ca_info=ca_info),
                                 proxy=Socks5Proxy(proxy_url=self.proxy) if self.proxy else None)
 
-    def __callServer(self, method="", params={}, data={}, callmethod='GET', content='application/json'):
+    def __callServer(self, method="", params={}, data={}, callmethod='GET', content='application/json', aggFunc=None):
         """
         A private method to make HTTP call to the DBS Server
 
@@ -190,18 +388,23 @@ class DbsApi(object):
             UserAgent = "DBSClient/"+os.environ['DBS3_CLIENT_VERSION']+"/"+ self.userAgent
         except:
             UserAgent = "DBSClient/Unknown"+"/"+ self.userAgent
-        request_headers =  {"Content-Type": content, "Accept": content, "UserID": UserID, "User-Agent":UserAgent }
+
+        request_headers = {"Content-Type": content, "Accept": self.accept, "UserID": UserID, "User-Agent":UserAgent}
 
         method_func = getattr(self.rest_api, callmethod.lower())
 
         data = json.dumps(data)
 
         try:
+            if self.debug:
+                print("HTTP={} URL={} method={} params={} data={} headers={}".format(callmethod, self.url, method, params, data, request_headers))
             self.http_response = method_func(self.url, method, params, data, request_headers)
         except HTTPError as http_error:
             self.__parseForException(http_error)
 
-        if content != "application/json":
+        if self.accept == "application/ndjson":
+            return parseStream(self.http_response.body)
+        if self.accept != "application/json":
             return self.http_response.body
 
         try:
@@ -209,6 +412,9 @@ class DbsApi(object):
         except ValueError as ex:
             print("The server output is not a valid json, most probably you have a typo in the url.\n%s.\n" % self.url, file=sys.stderr)
             raise dbsClientException("Invalid url", "Possible urls are %s" %self.http_response.body)
+
+        if self.aggregate and aggFunc:
+            return aggFunc(json_ret)
 
         return json_ret
 
@@ -247,7 +453,7 @@ class DbsApi(object):
     def requestContentLength(self):
         """
         Returns the content-length of the content return by the server
-       
+
         :rtype: str
         """
         try:
@@ -328,13 +534,13 @@ class DbsApi(object):
         #We first check if the first lumi section has event_count or not
         frst = True
         if (blockDump['files'][0]['file_lumi_list'][0]).get('event_count') == None: frst = False
-        # when frst == True, we are looking for event_count == None in the data, if we did not find None (redFlg = False), 
+        # when frst == True, we are looking for event_count == None in the data, if we did not find None (redFlg = False),
         # eveything is good. Otherwise, we have to remove all even_count in lumis and raise exception.
-        # when frst == False, weare looking for event_count != None in the data, if we did not find Not None (redFlg = False),        # everything is good. Otherwise, we have to remove all even_count in lumis and raise exception.     
+        # when frst == False, weare looking for event_count != None in the data, if we did not find Not None (redFlg = False),        # everything is good. Otherwise, we have to remove all even_count in lumis and raise exception.
         redFlag = False
         if frst:
             eventCT = (fl.get('event_count') is None for f in  blockDump['files'] for fl in f['file_lumi_list'])
-        else:                 
+        else:
             eventCT = (fl.get('event_count') is not None for f in  blockDump['files'] for fl in f['file_lumi_list'])
 
         redFlag = any(eventCT)
@@ -344,7 +550,7 @@ class DbsApi(object):
                     if 'event_count' in fl: del fl['event_count']
         result =  self.__callServer("bulkblocks", data=blockDump, callmethod='POST' )
         if redFlag:
-            raise dbsClientException("Mixed event_count per lumi in the block: %s" %blockDump['block']['block_name'], 
+            raise dbsClientException("Mixed event_count per lumi in the block: %s" %blockDump['block']['block_name'],
                                     "The block was inserted into DBS, but you need to check if the data is valid.")
         else:
             return result
@@ -471,16 +677,16 @@ class DbsApi(object):
 
         :param block_name: name of block who's parents dataset's trio needs to be found (Required)
         :type block_name: str
-        :returns: List of dictionaries containing following keys return: [{f1: [{r1:(l1, l2, ...)}, {r2:(l20, l21, ...)}, ...]} ..., {fn: [{r10:(l1, l2, ...)}, {r20:(l20, l21, ...)}, ...]}] 
+        :returns: List of dictionaries containing following keys return: [{f1: [{r1:(l1, l2, ...)}, {r2:(l20, l21, ...)}, ...]} ..., {fn: [{r10:(l1, l2, ...)}, {r20:(l20, l21, ...)}, ...]}]
         :rtype: list of dicts
-       
+
         """
         validParameters = ['dataset']
 
         requiredParameters = {'forced': ['dataset']}
         checkInputParameter(method="listParentDSTrio", parameters=list(kwargs.keys()), validParameters=validParameters,
                             requiredParameters=requiredParameters)
-        return self.__callServer("parentDSTrio", params=kwargs, callmethod='GET')
+        return self.__callServer("parentDSTrio", params=kwargs, callmethod='GET', aggFunc=aggParentDSTrio)
 
     def listBlockTrio(self, **kwargs):
         """
@@ -489,10 +695,10 @@ class DbsApi(object):
         :param block_name: name of the block whose trio needed to be found (Required)
         :type block_name: str
         :param logical_file_name: if not all the file under the block needed, this lfn list gives the files that needs to find their trio (optional).
-        :type logical_file_name: list of string  
-        :returns: List of dictionaries containing following return: [{f1: [{r1:(l1, l2, ...)}, {r2:(l20, l21, ...)}, ...]} ..., {fn: [{r10:(l1, l2, ...)}, {r20:(l20, l21, ...)}, ...]}]  
+        :type logical_file_name: list of string
+        :returns: List of dictionaries containing following return: [{f1: [{r1:(l1, l2, ...)}, {r2:(l20, l21, ...)}, ...]} ..., {fn: [{r10:(l1, l2, ...)}, {r20:(l20, l21, ...)}, ...]}]
         :rtype: list of dicts
-       
+
         """
         validParameters = ['block_name']
 
@@ -508,23 +714,23 @@ class DbsApi(object):
         :param block_name: name of block that has files who's parents needs to be found (Required)
         :type block_name: str
         :param logical_file_name: if not all the file parentages under the block needed, this lfn list gives the files that needs to find its parents(optional).
-        :type logical_file_name: list of string  
+        :type logical_file_name: list of string
         :returns: List of dictionaries containing following keys [cid,pid]
         :rtype: list of dicts
-       
+
         """
         validParameters = ['block_name', 'logical_file_name']
 
         requiredParameters = {'forced': ['block_name']}
         checkInputParameter(method="listFileParentsByLumi", parameters=list(kwargs.keys()), validParameters=validParameters,
                             requiredParameters=requiredParameters)
-        return self.__callServer("fileparentsbylumi", data=kwargs, callmethod='POST')
+        return self.__callServer("fileparentsbylumi", data=kwargs, callmethod='POST', aggFunc=aggFileParentsByLumi)
 
 
     def listApiDocumentation(self):
         """
         API to retrieve the auto-generated documentation page from server
-        
+
         """
         return self.__callServer(content="text/html")
 
@@ -588,7 +794,7 @@ class DbsApi(object):
         :type block_name: str
         :returns: List of dictionaries containing following keys (block_name)
         :rtype: list of dicts
-       
+
         """
         validParameters = ['block_name']
 
@@ -666,7 +872,7 @@ class DbsApi(object):
         :returns: list of dicts containing total block_sizes, file_counts and event_counts of dataset or blocks provided
 
         """
-        pass 
+        pass
 
 
 
@@ -773,8 +979,8 @@ class DbsApi(object):
         :type ldate: int, str
         :param detail: List all details of a dataset
         :type detail: bool
-	:param dataset_id: DB primary key of datasets table.
-        :type dataset_id: int, str	
+        :param dataset_id: DB primary key of datasets table.
+        :type dataset_id: int, str
         :returns: List of dictionaries containing the following keys (dataset). If the detail option is used. The dictionary contain the following keys (primary_ds_name, physics_group_name, acquisition_era_name, create_by, dataset_access_type, data_tier_name, last_modified_by, creation_date, processing_version, processed_ds_name, xtcrosssection, last_modification_date, dataset_id, dataset, prep_id, primary_ds_type)
         :rtype: list of dicts
 
@@ -810,7 +1016,7 @@ class DbsApi(object):
 
         checkInputParameter(method="listDatasetAccessTypes", parameters=list(kwargs.keys()), validParameters=validParameters)
 
-        return self.__callServer("datasetaccesstypes", params=kwargs)
+        return self.__callServer("datasetaccesstypes", params=kwargs, aggFunc=aggDatasetAccessTypes)
 
     def listDatasetArray(self, **kwargs):
         """
@@ -961,8 +1167,8 @@ class DbsApi(object):
         :param run_num: List lumi sections for a given run number (Optional). Possible format: run_num, "run_min-run_max", or ["run_min-run_max", run1, run2, ...] . run_num=1 is MC data and it will cause almost whole table scan, so run_num=1 will
                         cause an input error.
         :type run_num: int,str,list
-	:param validFileOnly: default value is 0 (optional), when set to 1, only valid files counted.
-	:type validFileOnly: int, str
+        :param validFileOnly: default value is 0 (optional), when set to 1, only valid files counted.
+        :type validFileOnly: int, str
         :returns: List of dictionaries containing the following keys (lumi_section_num, logical_file_name, run, event_count)
         :rtype: list of dicts
 
@@ -974,7 +1180,7 @@ class DbsApi(object):
         checkInputParameter(method="listFileLumis", parameters=list(kwargs.keys()), validParameters=validParameters,
                             requiredParameters=requiredParameters)
 
-        return self.__callServer("filelumis", params=kwargs)
+        return self.__callServer("filelumis", params=kwargs, aggFunc=aggFileLumis)
 
     def listFileLumiArray(self, **kwargs):
         """
@@ -1037,7 +1243,7 @@ class DbsApi(object):
         checkInputParameter(method="listFileParents", parameters=list(kwargs.keys()), validParameters=validParameters,
                             requiredParameters=requiredParameters)
 
-        return self.__callServer("fileparents", params=kwargs)
+        return self.__callServer("fileparents", params=kwargs, aggFunc=aggFileParents)
 
     def listFiles_doc(self, **kwargs):
         """
@@ -1051,12 +1257,12 @@ class DbsApi(object):
             - [[a,b], [c, d],]
         * lumi_list can be either a list of lumi section numbers as [a1, a2, a3,] or a list of lumi section range as [[a,b], [c, d],]. Thay cannot be mixed.
         * If lumi_list is provided run only run_num=single-run-number is allowed
-        * When lfn list is present, no run or lumi list is allowed.  
+        * When lfn list is present, no run or lumi list is allowed.
         * There are five dataset access types: VALID, INVALID, PRODUCTION, DEPRECATED and DELETED.
         * One file status: IS_FILE_VALID: 1 or 0.
         * There are five dataset access types: VALID, INVALID, PRODUCTION, DEPRECATED and DELETED.
         * One file status: IS_FILE_VALID: 1 or 0.
-        * When a dataset is INVALID/ DEPRECATED/ DELETED, DBS will consider all the files under it is invalid not matter what value is_file_valid has. 
+        * When a dataset is INVALID/ DEPRECATED/ DELETED, DBS will consider all the files under it is invalid not matter what value is_file_valid has.
           In general, when the dataset is in one of INVALID/ DEPRECATED/ DELETED, is_file_valid should all marked as 0, but some old DBS2 data was not.
         * When Dataset is VALID/PRODUCTION, by default is_file_valid is all 1. But if individual file is invalid, then the file's is_file_valid is set to 0.
         * DBS use this logical in its APIs that have validFileOnly variable.
@@ -1084,17 +1290,17 @@ class DbsApi(object):
         :type lumi_list: list
         :param detail: Get detailed information about a file
         :type detail: bool
-        :param validFileOnly: 0 or 1.  default=0. Return only valid files if set to 1. 
+        :param validFileOnly: 0 or 1.  default=0. Return only valid files if set to 1.
         :type validFileOnly: int
         :param sumOverLumi: default=0, counting with event_count/file; when = 1, using event_count/lumi when run_num is given; No list inputs are allowed whtn sumOverLumi=1.
-        :type sumOverLumi: int 
+        :type sumOverLumi: int
         :returns: List of dictionaries containing the following keys (logical_file_name). If detail parameter is true, the dictionaries contain the following keys (check_sum, branch_hash_id, adler32, block_id, event_count, file_type, create_by, logical_file_name, creation_date, last_modified_by, dataset, block_name, file_id, file_size, last_modification_date, dataset_id, file_type_id, auto_cross_section, md5, is_file_valid)
         :rtype: list of dicts
-        
+
         """
         pass
 
-    @split_calls    
+    @split_calls
     def listFiles(self, **kwargs):
         """
         listFiles(**kwargs)
@@ -1104,10 +1310,10 @@ class DbsApi(object):
         * For lumi_list the following two json formats are supported:
             - [a1, a2, a3,]
             - [[a,b], [c, d],]
-	* lumi_list can be either a list of lumi section numbers as [a1, a2, a3,] or a list of lumi section range as [[a,b], [c, d],]. Thay cannot be mixed.
+        * lumi_list can be either a list of lumi section numbers as [a1, a2, a3,] or a list of lumi section range as [[a,b], [c, d],]. Thay cannot be mixed.
         * If lumi_list is provided run only run_num=single-run-number is allowed
         * When lfn list is present, no run or lumi list is allowed.
-        
+
         * There are five dataset access types: VALID, INVALID, PRODUCTION, DEPRECATED and DELETED.
         * One file status: IS_FILE_VALID: 1 or 0.
         * There are five dataset access types: VALID, INVALID, PRODUCTION, DEPRECATED and DELETED.
@@ -1138,10 +1344,10 @@ class DbsApi(object):
         :type lumi_list: list
         :param detail: Get detailed information about a file
         :type detail: bool
-        :param validFileOnly: 0 or 1.  default=0. Return only valid files if set to 1. 
+        :param validFileOnly: 0 or 1.  default=0. Return only valid files if set to 1.
         :type validFileOnly: int
         :param sumOverLumi: default=0, counting with event_count/file; when = 1, using event_count/lumi when run_num is given.
-        :type sumOverLumi: int 
+        :type sumOverLumi: int
         :returns: List of dictionaries containing the following keys (logical_file_name). If detail parameter is true, the dictionaries contain the following keys (check_sum, branch_hash_id, adler32, block_id, event_count, file_type, create_by, logical_file_name, creation_date, last_modified_by, dataset, block_name, file_id, file_size, last_modification_date, dataset_id, file_type_id, auto_cross_section, md5, is_file_valid)
         :rtype: list of dicts
 
@@ -1167,14 +1373,14 @@ class DbsApi(object):
         """
         API to list files in DBS. Non-wildcarded logical_file_name, non-wildcarded dataset, non-wildcarded block_name or non-wildcarded lfn list is required.
         The combination of a non-wildcarded dataset or block_name with an wildcarded logical_file_name is supported.
-	
+
 
         * For lumi_list the following two json formats are supported:
             - [a1, a2, a3,]
             - [[a,b], [c, d],]
-	* lumi_list can be either a list of lumi section numbers as [a1, a2, a3,] or a list of lumi section range as [[a,b], [c, d],]. They cannot be mixed.
+        * lumi_list can be either a list of lumi section numbers as [a1, a2, a3,] or a list of lumi section range as [[a,b], [c, d],]. They cannot be mixed.
         * If lumi_list is provided run only run_num=single-run-number is allowed.
-        * When run_num=1, one has to provide logical_file_name. 
+        * When run_num=1, one has to provide logical_file_name.
         * When lfn list is present, no run or lumi list is allowed.
 
         :param logical_file_name: logical_file_name of the file, Max length 1000.
@@ -1199,9 +1405,9 @@ class DbsApi(object):
         :type lumi_list: list
         :param detail: Get detailed information about a file
         :type detail: bool
-        :param validFileOnly: 0 or 1.  default=0. Return only valid files if set to 1. 
+        :param validFileOnly: 0 or 1.  default=0. Return only valid files if set to 1.
         :type validFileOnly: int
-        :param sumOverLumi: 0 or 1.  default=0. When sumOverLumi = 1 and run_num is given , it will count the event by lumi; No list inputs are allowed whtn sumOverLumi=1. 
+        :param sumOverLumi: 0 or 1.  default=0. When sumOverLumi = 1 and run_num is given , it will count the event by lumi; No list inputs are allowed whtn sumOverLumi=1.
         :type sumOverLumi: int
         :returns: List of dictionaries containing the following keys (logical_file_name). If detail parameter is true, the dictionaries contain the following keys (check_sum, branch_hash_id, adler32, block_id, event_count, file_type, create_by, logical_file_name, creation_date, last_modified_by, dataset, block_name, file_id, file_size, last_modification_date, dataset_id, file_type_id, auto_cross_section, md5, is_file_valid)
         :rtype: list of dicts
@@ -1220,8 +1426,8 @@ class DbsApi(object):
 
         checkInputParameter(method="listFileArray", parameters=list(kwargs.keys()), validParameters=validParameters,
                             requiredParameters=requiredParameters)
-        # In order to protect DB and make sure the query can be return in 300 seconds, we limit the length of 
-        # logical file names, lumi and run num to 1000. These number may be adjusted later if 
+        # In order to protect DB and make sure the query can be return in 300 seconds, we limit the length of
+        # logical file names, lumi and run num to 1000. These number may be adjusted later if
         # needed. YG   May-20-2015.
 
         # CMS has all MC data with run_num=1. It almost is a full table scan if run_num=1 without lfn. So we will request lfn
@@ -1232,7 +1438,7 @@ class DbsApi(object):
                 raise dbsClientException('Invalid input', 'files API does not supprt two lists: run_num and lfn. ')
             elif 'lumi_list' in list(kwargs.keys()) and kwargs['lumi_list'] and len(kwargs['lumi_list']) > 1 :
                 raise dbsClientException('Invalid input', 'files API does not supprt two lists: lumi_lis and lfn. ')
-                
+
         elif 'lumi_list' in list(kwargs.keys()) and kwargs['lumi_list']:
             if 'run_num' not in list(kwargs.keys()) or not kwargs['run_num'] or kwargs['run_num'] ==-1 :
                 raise dbsClientException('Invalid input', 'When Lumi section is present, a single run is required. ')
@@ -1253,7 +1459,7 @@ class DbsApi(object):
             else:
                 if kwargs['run_num'] == 1 or kwargs['run_num'] == '1':
                     raise dbsClientException('Invalid input', 'files API does not supprt run_num=1 without logical_file_name.')
-        
+
         results = []
         mykey = None
         total_lumi_len = 0
@@ -1284,7 +1490,7 @@ class DbsApi(object):
             elif key in ('logical_file_name', 'run_num', 'lumi_list') and isinstance(value, list) and len(value)>max_list_len:
                 mykey =key
 #
-        if mykey:  
+        if mykey:
             sourcelist = []
             #create a new list to slice
             sourcelist = kwargs[mykey][:]
@@ -1297,7 +1503,7 @@ class DbsApi(object):
                 results.extend(self.__callServer("fileArray", data=kwargs, callmethod="POST"))
         else:
             return self.__callServer("fileArray", data=kwargs, callmethod="POST")
-        
+
         #make sure only one dictionary per lfn.
         #Make sure this changes when we move to 2.7 or 3.0
         #http://stackoverflow.com/questions/11092511/python-list-of-unique-dictionaries
@@ -1310,13 +1516,13 @@ class DbsApi(object):
         parameter is used, output are:
                 The number of files which have data (lumis) for that run number;
                 The total number of events in those files;
-                The total number of lumis for that run_number. Note that in general this is different from the total 
-                number of lumis in those files, since lumis are filtered by the run_number they belong to, while events 
+                The total number of lumis for that run_number. Note that in general this is different from the total
+                number of lumis in those files, since lumis are filtered by the run_number they belong to, while events
                 are only counted as total per file before run 3. Howvere, when sumOverLumi=1, events will count by lumi when run_num
                 is given while event_count/lumi is filled. If sumOverLumi=1, but event_count/lumi is not filled for any of the lumis in the block or
-                dataset, then the API will return NULL for num_event. 
+                dataset, then the API will return NULL for num_event.
                 The total num blocks that have the run_num;
- 
+
         Either block_name or dataset name is required. No wild-cards are allowed
 
         :param block_name: Block name
@@ -1327,9 +1533,9 @@ class DbsApi(object):
                         cause an input error.
         :type run_num: int, str, list
         :param validFileOnly: default=0 all files included. if 1, only valid file counted.
-        :type validFileOnly: int 
+        :type validFileOnly: int
         :param sumOverLumi: default=0, counting with event_count/file; when = 1, using event_count/lumi when run_num is given.
-        :type sumOverLumi: int 
+        :type sumOverLumi: int
         :returns: List of dictionaries containing the following keys (num_file, num_lumi, num_block, num_event, file_size)
         :rtype: list of dicts
 
@@ -1443,9 +1649,9 @@ class DbsApi(object):
 
         """
         validParameters = ['processing_version']
-        
+
         checkInputParameter(method="listProcessingEras", parameters=list(kwargs.keys()), validParameters=validParameters)
-        
+
         return self.__callServer("processingeras", params=kwargs)
 
     def listReleaseVersions(self, **kwargs):
@@ -1470,7 +1676,7 @@ class DbsApi(object):
 
     def listRuns(self, **kwargs):
         """
-        API to list all run dictionary, for example: [{'run_num': [160578, 160498, 160447, 160379]}]. 
+        API to list all run dictionary, for example: [{'run_num': [160578, 160498, 160447, 160379]}].
         At least one parameter is mandatory.
 
         :param logical_file_name: List all runs in the file
@@ -1490,7 +1696,7 @@ class DbsApi(object):
         checkInputParameter(method="listRuns", parameters=list(kwargs.keys()), validParameters=validParameters,
                             requiredParameters=requiredParameters)
 
-        return self.__callServer("runs", params=kwargs)
+        return self.__callServer("runs", params=kwargs, aggFunc=aggRuns)
 
     def listRunSummaries(self, **kwargs):
         """
@@ -1543,7 +1749,7 @@ class DbsApi(object):
         validParameters = ['migration_rqst_id', 'block_name', 'dataset', 'user']
 
         checkInputParameter(method='statusMigration', parameters=list(kwargs.keys()), validParameters=validParameters)
-        
+
         return self.__callServer("status", params=kwargs)
 
     def removeMigration(self, migrationObj):

@@ -17,7 +17,7 @@ print("****uid=%s******" %uid)
 
 print(os.environ['DBS_WRITER_URL'])
 primary_ds_name = 'unittest_web_primary_ds_name_%s' % uid
-processing_version="%s" %(uid if (uid<9999) else uid%9999)
+processing_version = (uid if (uid<9999) else uid%9999)
 acquisition_era_name="acq_era_%s" %uid
 procdataset = '%s-v%s' % (acquisition_era_name, processing_version)
 parent_procdataset = '%s-pstr-v%s' % (acquisition_era_name, processing_version)
@@ -82,7 +82,8 @@ class DBSClientWriter_t(unittest.TestCase):
         super(DBSClientWriter_t, self).__init__(methodName)
         url=os.environ['DBS_WRITER_URL']
         proxy=os.environ.get('SOCKS5_PROXY')
-        self.api = DbsApi(url=url, proxy=proxy)
+        debug = os.environ.get('DBS_DEBUG')
+        self.api = DbsApi(url=url, proxy=proxy, debug=debug)
 
     def setUp(self):
         """setup all necessary parameters"""
@@ -131,7 +132,7 @@ class DBSClientWriter_t(unittest.TestCase):
                  'output_module_label': output_module_label, 'global_tag':global_tag}
                 ],
             'xtcrosssection': 123, 'primary_ds_type': 'test', 'data_tier_name': tier,
-            'creation_date': 1234, 'create_by': 'anzar', "last_modification_date": 1234, "last_modified_by": "testuer",
+            'creation_date': 1635177605, 'create_by': 'anzar', "last_modification_date": 1635177605, "last_modified_by": "testuer",
             'processing_version': processing_version,  'acquisition_era_name': acquisition_era_name,
             }
         self.api.insertDataset(datasetObj=data)
@@ -145,7 +146,7 @@ class DBSClientWriter_t(unittest.TestCase):
                  'output_module_label': output_module_label, 'global_tag':global_tag}
                 ],
             'xtcrosssection': 123, 'primary_ds_type': 'test', 'data_tier_name': tier,
-            'creation_date': 1234, 'create_by': 'anzar', "last_modification_date": 1234, "last_modified_by": "testuser",
+            'creation_date': 1635177605, 'create_by': 'anzar', "last_modification_date": 1635177605, "last_modified_by": "testuser",
             'processing_version': processing_version,  'acquisition_era_name': acquisition_era_name,
             }
         self.api.insertDataset(datasetObj=parentdata)
@@ -160,7 +161,7 @@ class DBSClientWriter_t(unittest.TestCase):
                  'output_module_label': output_module_label, 'global_tag':global_tag},
                 ],
             'xtcrosssection': 123, 'primary_ds_type': 'test', 'data_tier_name': tier,
-            'creation_date': 1234, 'create_by': 'anzar', "last_modification_date": 1234, "last_modified_by": "anzar",
+            'creation_date': 1635177605, 'create_by': 'anzar', "last_modification_date": 1635177605, "last_modified_by": "anzar",
             'processing_version': processing_version,  'acquisition_era_name': acquisition_era_name,
             }
         self.api.insertDataset(datasetObj=data)
@@ -175,7 +176,7 @@ class DBSClientWriter_t(unittest.TestCase):
             'physics_group_name': 'Tracker', 'primary_ds_name': primary_ds_name2,
             'dataset_access_type': 'PRODUCTION', 'processed_ds_name': procdataset,
             'xtcrosssection': 123, 'primary_ds_type': 'test', 'data_tier_name': tier,
-            'creation_date': 1234, 'create_by': 'testuser', "last_modification_date": 1234, "last_modified_by"
+            'creation_date': 1635177605, 'create_by': 'testuser', "last_modification_date": 1635177605, "last_modified_by"
             : "testuser",
             'processing_version': processing_version,  'acquisition_era_name': acquisition_era_name,
             }
@@ -210,36 +211,36 @@ class DBSClientWriter_t(unittest.TestCase):
                      'output_module_label': output_module_label,'global_tag':global_tag },
                     ],
                 'dataset': parent_dataset,
-                'file_size': '2012211901', 'auto_cross_section': 0.0,
+                'file_size': 2012211901, 'auto_cross_section': 0.0,
                 'check_sum': '1504266448',
                 'file_lumi_list': [
-                    {'lumi_section_num': '27414', 'run_num': '97', 'event_count': '66'},
-                    {'lumi_section_num': '26422', 'run_num': '97', 'event_count': '67'},
-                    {'lumi_section_num': '29838', 'run_num': '97', 'event_count': '68'},
-                    {'lumi_section_num': '248', 'run_num': '97',   'event_count': '69'},
-                    {'lumi_section_num': '250', 'run_num': '97', 'event_count': '70'},
-                    {'lumi_section_num': '300', 'run_num': '97', 'event_count': '71'},
-                    {'lumi_section_num': '534', 'run_num': '97', 'event_count': '72'},
-                    {'lumi_section_num': '546', 'run_num': '97', 'event_count': '73'},
-                    {'lumi_section_num': '638', 'run_num': '97', 'event_count': '74'},
-                    {'lumi_section_num': '650', 'run_num': '97', 'event_count': '75'},
-                    {'lumi_section_num': '794', 'run_num': '97', 'event_count': '76'},
-                    {'lumi_section_num': '1313', 'run_num': '97', 'event_count': '77'},
-                    {'lumi_section_num': '1327', 'run_num': '97', 'event_count': '78'},
-                    {'lumi_section_num': '1339', 'run_num': '97', 'event_count': '79'},
-                    {'lumi_section_num': '1353', 'run_num': '97', 'event_count': '80'},
-                    {'lumi_section_num': '1428', 'run_num': '97', 'event_count': '81'},
-                    {'lumi_section_num': '1496', 'run_num': '97', 'event_count': '82'},
-                    {'lumi_section_num': '1537', 'run_num': '97', 'event_count': '83'},
-                    {'lumi_section_num': '1652', 'run_num': '97', 'event_count': '84'},
-                    {'lumi_section_num': '1664', 'run_num': '97', 'event_count': '85'},
-                    {'lumi_section_num': '1743', 'run_num': '97', 'event_count': '86'},
-                    {'lumi_section_num': '1755', 'run_num': '97', 'event_count': '87'},
-                    {'lumi_section_num': '1860', 'run_num': '97', 'event_count': '88'},
-                    {'lumi_section_num': '1872', 'run_num': '97', 'event_count': '89'}
+                    {'lumi_section_num': 27414, 'run_num': 97, 'event_count': 66},
+                    {'lumi_section_num': 26422, 'run_num': 97, 'event_count': 67},
+                    {'lumi_section_num': 29838, 'run_num': 97, 'event_count': 68},
+                    {'lumi_section_num': 248, 'run_num': 97,   'event_count': 69},
+                    {'lumi_section_num': 250, 'run_num': 97, 'event_count': 70},
+                    {'lumi_section_num': 300, 'run_num': 97, 'event_count': 71},
+                    {'lumi_section_num': 534, 'run_num': 97, 'event_count': 72},
+                    {'lumi_section_num': 546, 'run_num': 97, 'event_count': 73},
+                    {'lumi_section_num': 638, 'run_num': 97, 'event_count': 74},
+                    {'lumi_section_num': 650, 'run_num': 97, 'event_count': 75},
+                    {'lumi_section_num': 794, 'run_num': 97, 'event_count': 76},
+                    {'lumi_section_num': 1313, 'run_num': 97, 'event_count': 77},
+                    {'lumi_section_num': 1327, 'run_num': 97, 'event_count': 78},
+                    {'lumi_section_num': 1339, 'run_num': 97, 'event_count': 79},
+                    {'lumi_section_num': 1353, 'run_num': 97, 'event_count': 80},
+                    {'lumi_section_num': 1428, 'run_num': 97, 'event_count': 81},
+                    {'lumi_section_num': 1496, 'run_num': 97, 'event_count': 82},
+                    {'lumi_section_num': 1537, 'run_num': 97, 'event_count': 83},
+                    {'lumi_section_num': 1652, 'run_num': 97, 'event_count': 84},
+                    {'lumi_section_num': 1664, 'run_num': 97, 'event_count': 85},
+                    {'lumi_section_num': 1743, 'run_num': 97, 'event_count': 86},
+                    {'lumi_section_num': 1755, 'run_num': 97, 'event_count': 87},
+                    {'lumi_section_num': 1860, 'run_num': 97, 'event_count': 88},
+                    {'lumi_section_num': 1872, 'run_num': 97, 'event_count': 89}
                     ],
                 'file_parent_list': [ ],
-                'event_count': '1619',
+                'event_count': 1619,
                 'logical_file_name': "/store/mc/Fall08/BBJets250to500-madgraph/GEN-SIM-RAW/IDEAL_/p%s/%i.root" %(uid, i),
                 'block_name': parent_block
                 #'is_file_valid': 1
@@ -260,15 +261,15 @@ class DBSClientWriter_t(unittest.TestCase):
                      'output_module_label': output_module_label, 'global_tag':global_tag},
                     ],
                 'dataset': dataset,
-                'file_size': '2012211901', 'auto_cross_section': 0.0,
+                'file_size': 2012211901, 'auto_cross_section': 0.0,
                 'check_sum': '1504266448',
                 'file_lumi_list': [
-                    {'lumi_section_num': '27414', 'run_num': '97'},
-                    {'lumi_section_num': '26422', 'run_num': '98'},
-                    {'lumi_section_num': '29838', 'run_num': '99'}
+                    {'lumi_section_num': 27414, 'run_num': 97},
+                    {'lumi_section_num': 26422, 'run_num': 98},
+                    {'lumi_section_num': 29838, 'run_num': 99}
                     ],
                 'file_parent_list': [ {"file_parent_lfn" : "/store/mc/Fall08/BBJets250to500-madgraph/GEN-SIM-RAW/IDEAL_/p%s/%i.root" %(uid, i)} ],
-                'event_count': '1619',
+                'event_count': 1619,
                 'logical_file_name': "/store/mc/Fall08/BBJets250to500-madgraph/GEN-SIM-RAW/IDEAL_/%s/%i.root" %(uid, i),
                 'block_name': block
                 #'is_file_valid': 1
@@ -289,15 +290,15 @@ class DBSClientWriter_t(unittest.TestCase):
                      'output_module_label': output_module_label, 'global_tag':global_tag},
                     ],
                 'dataset': dataset,
-                'file_size': '2012211901', 'auto_cross_section': 0.0,
+                'file_size': 2012211901, 'auto_cross_section': 0.0,
                 'check_sum': '1504266448',
                 'file_lumi_list': [
-                    {'lumi_section_num': '27414', 'run_num': '97'},
-                    {'lumi_section_num': '26422', 'run_num': '98'},
-                    {'lumi_section_num': '29838', 'run_num': '99'}
+                    {'lumi_section_num': 27414, 'run_num': 97},
+                    {'lumi_section_num': 26422, 'run_num': 98},
+                    {'lumi_section_num': 29838, 'run_num': 99}
                     ],
                 'file_parent_list': [ {"file_parent_lfn" : "/store/mc/Fall08/BBJets250to500-madgraph/GEN-SIM-RAW/IDEAL_/p%s/%i.root" %(uid, i)} ],
-                'event_count': '1619',
+                'event_count': 1619,
                 'logical_file_name': "/store/mc/Fall08/BBJets250to500-madgraph/GEN-SIM-RAW/IDEAL_/%s/%i.root" %(uid, i),
                 'block_name': block
                 #'is_file_valid': 1
@@ -390,14 +391,14 @@ class DBSClientWriter_t(unittest.TestCase):
                 #    {'release_version': release_version, 'pset_hash': pset_hash, 'app_name': app_name,
                 #     'output_module_label': output_module_label,'global_tag':global_tag },
                 #    ],
-                'file_size': '2012211901', 'auto_cross_section': 0.0,
+                'file_size': 2012211901, 'auto_cross_section': 0.0,
                 'check_sum': '1504266448',
                 'file_lumi_list': [
                     {'lumi_section_num': 27414+i, 'run_num': 98, 'event_count': 66},
                     {'lumi_section_num': 26422+i, 'run_num': 98, 'event_count': 67},
                     {'lumi_section_num': 29838+i, 'run_num': 98, 'event_count': 68},
                     ],
-                'event_count': '201',
+                'event_count': 201,
                 'logical_file_name': "/store/mc/Fall08/BBJets250to500-madgraph/GEN-SIM-RAW/StepChain_/p%s/%i.root" %(uid, i),
                 #'is_file_valid': 1
                 }

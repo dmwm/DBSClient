@@ -55,11 +55,12 @@ class DBSValidation_t(unittest.TestCase):
             self.setUpClass()
         url = os.environ['DBS_WRITER_URL']
         proxy = os.environ.get('SOCKS5_PROXY')
-        self.api = DbsApi(url=url, proxy=proxy)
+        self.debug = os.environ.get('DBS_DEBUG')
+        self.api = DbsApi(url=url, proxy=proxy, debug=self.debug)
         migration_url = os.environ['DBS_MIGRATE_URL']
-        self.migration_api = DbsApi(url=migration_url, proxy=proxy)
+        self.migration_api = DbsApi(url=migration_url, proxy=proxy, debug=self.debug)
         self.source_url='https://cmsweb.cern.ch:8443/dbs/prod/global/DBSReader'
-        self.cmsweb_api = DbsApi(url=self.source_url, proxy=proxy)
+        self.cmsweb_api = DbsApi(url=self.source_url, proxy=proxy, debug=self.debug)
         self.cmswebtestbed_api = DbsApi(url='https://cmsweb-testbed.cern.ch/dbs/int/global/DBSReader', proxy=proxy)
 
     def setUp(self):
@@ -120,7 +121,7 @@ class DBSValidation_t(unittest.TestCase):
                  'output_module_label': output_module_label, 'global_tag' : global_tag},
                 ],
             'xtcrosssection': 123, 'primary_ds_type': 'test', 'data_tier_name': tier,
-            'creation_date': 1234, 'create_by': 'anzar', "last_modification_date": 1234, "last_modified_by": "anzar",
+            'creation_date': 1635177605, 'create_by': 'anzar', "last_modification_date": 1635177605, "last_modified_by": "anzar",
             'processing_version': processing_version,  'acquisition_era_name': acquisition_era_name,
             }
         self.api.insertDataset(datasetObj=data)
@@ -196,7 +197,7 @@ class DBSValidation_t(unittest.TestCase):
                  'output_module_label': output_module_label, 'global_tag': global_tag},
                 ],
             'xtcrosssection': 123, 'primary_ds_type': 'test', 'data_tier_name': tier,
-            'creation_date': 1234, 'create_by': 'anzar', "last_modification_date": 1234, "last_modified_by": "anzar",
+            'creation_date': 1635177605, 'create_by': 'anzar', "last_modification_date": 1635177605, "last_modified_by": "anzar",
             'processing_version': processing_version,  'acquisition_era_name': acquisition_era_name,
             }
         self.api.insertDataset(datasetObj=data)
@@ -211,15 +212,15 @@ class DBSValidation_t(unittest.TestCase):
             f={
                 'adler32': 'NOTSET', 'file_type': 'EDM',
                 'dataset': dataset_parent,
-                'file_size': '201221191', 'auto_cross_section': 0.0,
+                'file_size': 201221191, 'auto_cross_section': 0.0,
                 'check_sum': '1504266448',
-                'event_count': '1619',
+                'event_count': 1619,
                 'logical_file_name': "/store/mc/Fall08/BBJets250to500-madgraph/GEN-SIM-RAW/IDEAL_/%s/parent_%i.root" %(uid, i),
                 'block_name': block_parent,
                 'file_lumi_list': [
-                    {'lumi_section_num': '27414', 'run_num': '1'},
-                    {'lumi_section_num': '26422', 'run_num': '1'},
-                    {'lumi_section_num': '29838', 'run_num': '1'}
+                    {'lumi_section_num': 27414, 'run_num': 1},
+                    {'lumi_section_num': 26422, 'run_num': 1},
+                    {'lumi_section_num': 29838, 'run_num': 1}
                     ]
                 }
             pflist.append(f)
@@ -234,15 +235,15 @@ class DBSValidation_t(unittest.TestCase):
                      'output_module_label': output_module_label, 'global_tag': global_tag},
                     ],
                 'dataset': dataset,
-                'file_size': '201221191', 'auto_cross_section': 0.0,
+                'file_size': 201221191, 'auto_cross_section': 0.0,
                 'check_sum': '1504266448',
                 'file_lumi_list': [
-                    {'lumi_section_num': '27414', 'run_num': '1'},
-                    {'lumi_section_num': '26422', 'run_num': '1'},
-                    {'lumi_section_num': '29838', 'run_num': '1'}
+                    {'lumi_section_num': 27414, 'run_num': 1},
+                    {'lumi_section_num': 26422, 'run_num': 1},
+                    {'lumi_section_num': 29838, 'run_num': 1}
                     ],
                 'file_parent_list': [ {"file_parent_lfn" : "/store/mc/Fall08/BBJets250to500-madgraph/GEN-SIM-RAW/IDEAL_/%s/parent_%i.root" %(uid, i)} ],
-                'event_count': '1619',
+                'event_count': 1619,
                 'logical_file_name': "/store/mc/Fall08/BBJets250to500-madgraph/GEN-SIM-RAW/IDEAL_/%s/%i.root" %(uid, i),
                 'block_name': block
                 #'is_file_valid': 1
@@ -316,17 +317,16 @@ class DBSValidation_t(unittest.TestCase):
         input_block_dump = self.data_provider.block_dump()[0]
         self.api.insertBulkBlock(input_block_dump)
         block_dump = self.api.blockDump(block_name=input_block_dump['block']['block_name'])
-        """
-        print("****************************************************************test11")
-        import pprint
-        print("input_block_dump")
-        pp = pprint.PrettyPrinter(indent=4)
-        pp.pprint(input_block_dump)
-        print("######################")
-        print("block_dump")
-        pp.pprint(block_dump)
-        print("****************************************************************")
-        """
+        if self.debug:
+            print("****************************************************************test11")
+            import pprint
+            print("input_block_dump")
+            pp = pprint.PrettyPrinter(indent=4)
+            pp.pprint(input_block_dump)
+            print("######################")
+            print("block_dump")
+            pp.pprint(block_dump)
+            print("****************************************************************")
         def check(input, output):
             if isinstance(input, dict):
                 for key, value in input.items():
@@ -350,30 +350,56 @@ class DBSValidation_t(unittest.TestCase):
                         print("--------output description--------")
                         print(output[key])
                     """
+                    if key not in output:
+                        if self.degug:
+                            print("no %s found in output" % key)
                     self.assertTrue(key in output)
+                    if not output[key]:
+                        if self.debug:
+                            print("no values for %s" % key)
+                        if value:
+                            if self.debug:
+                                print("key %s has valut %s in input data" % (key, value))
+#                                 self.assertEqual(value, output[key])
                     if key == "file_lumi_list":
-                        output[key].sort(key=lambda x: x.get('lumi_section_num'))
+                        if isinstance(output[key], list):
+                            output[key].sort(key=lambda x: x.get('lumi_section_num'))
                         value.sort(key=lambda x: x.get('lumi_section_num'))
                     elif key == "dataset_conf_list":
-                        output[key].sort(key=lambda x: x.get('output_module_label') + str(x.get('creation_date')))
+                        if isinstance(output[key], list):
+                            output[key].sort(key=lambda x: x.get('output_module_label') + str(x.get('creation_date')))
                         value.sort(key=lambda x: x.get('output_module_label') + str(x.get('creation_date')))
                     elif key == "file_parent_list":
-                        output[key].sort(key=lambda x: x.get('parent_logical_file_name') + x.get('this_logical_file_name'))
+                        if isinstance(output[key], list):
+                            output[key].sort(key=lambda x: x.get('parent_logical_file_name') + x.get('this_logical_file_name'))
                         value.sort(key=lambda x: x.get('parent_logical_file_name') + x.get('this_logical_file_name'))
                     elif key == "file_conf_list":
-                        output[key].sort(key=lambda x: x.get('lfn'))
+                        if isinstance(output[key], list):
+                            output[key].sort(key=lambda x: x.get('lfn'))
                         value.sort(key=lambda x: x.get('lfn'))
                     elif key == "files":
-                        output[key].sort(key=lambda x: x.get('logical_file_name'))
+                        if isinstance(output[key], list):
+                            output[key].sort(key=lambda x: x.get('logical_file_name'))
                         value.sort(key=lambda x: x.get('logical_file_name'))
                     elif key == "block_parent_list":
-                        output[key].sort(key=lambda x: x.get('parent_block_name'))
+                        if isinstance(output[key], list):
+                            output[key].sort(key=lambda x: x.get('parent_block_name'))
                         value.sort(key=lambda x: x.get('parent_block_name'))
 
                     check(value, output[key])
             elif isinstance(input, list):
+                if not isinstance(output, list):
+                    if self.debug:
+                        print("wrong data-type %s, we expect a list" % type(output))
+                    if input:
+                        self.assertEqual(input, output)
+                    if not output:
+                        output = [] # if output is None/null we need it as list for operation below
                 for element_in, element_out in zip(sorted(input, key=lambda x: [x.keys() if isinstance(x, dict) else str(x)]), sorted(output, key=lambda x: [x.keys() if isinstance(x, dict) else str(x)])):
                     check(element_in, element_out)
+            elif not input and not output:
+                if self.debug:
+                    print("no input '%s' and output '%s' values are provided" % (input, output))
             else:
                 self.assertEqual(str(input), str(output))
 

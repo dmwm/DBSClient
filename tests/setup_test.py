@@ -84,6 +84,10 @@ class TestCommand(Command):
                    ('deployment', None, 'Run client deployment tests'),
                    ('insert', None, 'Insert data during deployment tests'),
                    ('cmsweb-testbed', None, 'Run standarized cmsweb-testbed validation tests'),
+                   ('reader=', None, 'DBSReader url (used in writer tests)'),
+                   ('writer=', None, 'DBSWriter url (used in writer tests)'),
+                   ('migrate=', None, 'DBS migrate url (used in migrate tests)'),
+                   ('debug=', None, 'turn on debug info'),
                    ('host=', None, 'Host to run unittests')]
 
     description = """Test DBS3 Client using provided unittests, possible options are\n
@@ -92,6 +96,10 @@ class TestCommand(Command):
                   --validation to run client validation tests\n
                   --deployment to run client deployment tests\n
                   --insert data during client deployment tests\n
+                  --reader use custom DBSReader URL\n
+                  --writer use custom DBSWriter URL\n
+                  --migrate use custom DBS migrate URL\n
+                  --debug specify debug level\n
                   --cmsweb-testbed to run standardized cmsweb-testbed validation tests\n
                   --host= to run unittests"""
 
@@ -103,6 +111,10 @@ class TestCommand(Command):
         self.insert = None
         self.cmsweb_testbed = None
         self.host = None
+        self.reader = ""
+        self.writer = ""
+        self.migrate = ""
+        self.debug = 0
 
     def finalize_options(self):
         #Check if environment us set-up correctly
@@ -139,13 +151,30 @@ class TestCommand(Command):
                         'https://cmsweb.cern.ch': 'prod/test'}
 
         ###set environment
-        os.environ['DBS_READER_URL'] = ("%s/dbs/%s/DBSReader") % (self.host, db_instances.get(self.host, 'dev/global'))
-        os.environ['DBS_WRITER_URL'] = ("%s/dbs/%s/DBSWriter") % (self.host, db_instances.get(self.host, 'dev/global'))
-        os.environ['DBS_MIGRATE_URL'] = ("%s/dbs/%s/DBSMigrate") % (self.host,
-                                                                    db_instances.get(self.host, 'dev/global'))
+        
+        # if user provide specific reader/writer/migrate url we'll use them
+        if self.reader != "":
+            os.environ['DBS_READER_URL'] = self.reader
+        else:
+            os.environ['DBS_READER_URL'] = ("%s/dbs/%s/DBSReader") % (self.host, db_instances.get(self.host, 'dev/global'))
+        if self.writer != "":
+            os.environ['DBS_WRITER_URL'] = self.writer
+        else:
+            os.environ['DBS_WRITER_URL'] = ("%s/dbs/%s/DBSWriter") % (self.host, db_instances.get(self.host, 'dev/global'))
+        if self.migrate != "":
+            os.environ['DBS_MIGRATE_URL'] = self.migrate
+        else:
+            os.environ['DBS_MIGRATE_URL'] = ("%s/dbs/%s/DBSMigrate") % (self.host,
+                                                                        db_instances.get(self.host, 'dev/global'))
+        if self.debug:
+            os.environ['DBS_DEBUG'] = "1"
 
         if self.cmsweb_testbed:
             self.unitall, self.validation, self.deployment = (True, True, True)
+
+        # comment out deployment if specific reader/writer/migrate URL are provided
+        if self.reader or self.writer or self.migrate:
+            self.deployment = False
 
         if self.unit in ('ClientWriter', 'ClientReader', 'ClientBlockWriter'):
             TestSuite.addTests(create_test_suite(unit_tests, 'DBS%s_t.py' % self.unit, base_dir))

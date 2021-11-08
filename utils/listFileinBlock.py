@@ -5,19 +5,19 @@ import time
 #DBS-3 imports
 from dbs.apis.dbsClient import *
 try:
-        # Python 2.6
-        import json
+    # Python 2.6
+    import json
 except:
-        # Prior to 2.6 requires simplejson
-        import simplejson as json
+    # Prior to 2.6 requires simplejson
+    import simplejson as json
 
 #url="https://cmsweb.cern.ch:8443/dbs/prod/global/DBSReader/"
 url="https://dbs3-test1.cern.ch/dbs/dev/global/DBSReader/"
 if len(sys.argv) < 1:
     print("Usage: python %s <block>" %sys.argv[0])
     sys.exit(1)
-		
-# API Object    
+
+# API Object
 dbs3api = DbsApi(url=url)
 thisBlock = sys.argv[1]
 #print thisBlock
