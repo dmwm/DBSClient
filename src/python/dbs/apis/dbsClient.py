@@ -5,11 +5,13 @@ from RestClient.AuthHandling.X509Auth import X509Auth
 from RestClient.ProxyPlugins.Socks5Proxy import Socks5Proxy
 
 import json
+import gzip
 import os
 import socket
 import sys
 import urllib.request, urllib.parse, urllib.error
 
+<<<<<<< fix-json-err
 def headerHas(headers, content, mime):
     """
     Check mime content in HTTP headers which represented as multi line string.
@@ -22,6 +24,21 @@ def headerHas(headers, content, mime):
             if mime.lower() in hdr.lower():
                 return True
     return False
+=======
+def compress(body):
+    """
+    Compress data using gzip
+    """
+    if isinstance(body, str):
+        return gzip.compress(bytes(body, 'utf-8'))
+    return gzip.compress(body)
+
+def decompress(body):
+    """
+    Decompress given data from gzip'ed format
+    """
+    return gzip.decompress(body).decode('utf-8')
+>>>>>>> main
 
 def parseStream(results):
     """
@@ -346,7 +363,7 @@ def split_calls(func):
 
 class DbsApi(object):
     #added CAINFO and userAgent (see github issue #431 & #432)
-    def __init__(self, url="", proxy=None, key=None, cert=None, verifypeer=True, debug=0, ca_info=None, userAgent="", port=8443, accept="application/json", aggregate=True):
+    def __init__(self, url="", proxy=None, key=None, cert=None, verifypeer=True, debug=0, ca_info=None, userAgent="", port=8443, accept="application/json", aggregate=True, useGzip=False):
         """
         DbsApi Constructor
 
@@ -376,7 +393,11 @@ class DbsApi(object):
         self.accept = accept
         self.aggregate = aggregate
         self.debug = debug
+<<<<<<< fix-json-err
         self.http_response = None
+=======
+        self.gzip = useGzip
+>>>>>>> main
 
         self.rest_api = RestApi(auth=X509Auth(ssl_cert=cert, ssl_key=key, ssl_verifypeer=verifypeer, ca_info=ca_info),
                                 proxy=Socks5Proxy(proxy_url=self.proxy) if self.proxy else None)
@@ -408,6 +429,9 @@ class DbsApi(object):
         method_func = getattr(self.rest_api, callmethod.lower())
 
         data = json.dumps(data)
+        if self.gzip and callmethod == 'POST':
+            request_headers['Content-Encoding'] = 'gzip'
+            data = compress(data)
 
         try:
             if self.debug:
