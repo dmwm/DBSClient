@@ -11,6 +11,20 @@ import socket
 import sys
 import urllib.request, urllib.parse, urllib.error
 
+<<<<<<< fix-json-err
+def headerHas(headers, content, mime):
+    """
+    Check mime content in HTTP headers which represented as multi line string.
+    The content is pattern a particular header should start with and mime
+    is a value of the content. For instance, a typical usage is to check if
+    given content type exists in HTTP Header, e.g. Content-Type: application/json
+    """
+    for hdr in headers.split('\n'):
+        if content.lower() in hdr.lower():
+            if mime.lower() in hdr.lower():
+                return True
+    return False
+=======
 def compress(body):
     """
     Compress data using gzip
@@ -24,6 +38,7 @@ def decompress(body):
     Decompress given data from gzip'ed format
     """
     return gzip.decompress(body).decode('utf-8')
+>>>>>>> main
 
 def parseStream(results):
     """
@@ -378,7 +393,11 @@ class DbsApi(object):
         self.accept = accept
         self.aggregate = aggregate
         self.debug = debug
+<<<<<<< fix-json-err
+        self.http_response = None
+=======
         self.gzip = useGzip
+>>>>>>> main
 
         self.rest_api = RestApi(auth=X509Auth(ssl_cert=cert, ssl_key=key, ssl_verifypeer=verifypeer, ca_info=ca_info),
                                 proxy=Socks5Proxy(proxy_url=self.proxy) if self.proxy else None)
@@ -419,7 +438,17 @@ class DbsApi(object):
                 print("HTTP={} URL={} method={} params={} data={} headers={}".format(callmethod, self.url, method, params, data, request_headers))
             self.http_response = method_func(self.url, method, params, data, request_headers)
         except HTTPError as http_error:
-            self.__parseForException(http_error)
+            if headerHas(http_error.header, 'Content-Type', 'application/json'):
+                self.__parseForException(http_error)
+            else:
+                msg = "\nURL={}\nCode={}\nMessage={}\nHeader={}\nBody={}\n".format(
+                        http_error.url,
+                        http_error.code,
+                        http_error.msg,
+                        http_error.header,
+                        http_error.body)
+                data = HTTPError(http_error.url, http_error.code, msg, http_error.header, http_error.body)
+                self.__parseForException(data)
 
         if self.accept == "application/ndjson":
             return parseStream(self.http_response.body)
@@ -430,7 +459,7 @@ class DbsApi(object):
             json_ret=json.loads(self.http_response.body)
         except ValueError as ex:
             print("The server output is not a valid json, most probably you have a typo in the url.\n%s.\n" % self.url, file=sys.stderr)
-            raise dbsClientException("Invalid url", "Possible urls are %s" %self.http_response.body)
+            raise dbsClientException("Invalid url", "Possible urls are %s" % self.http_response.body)
 
         if self.aggregate and aggFunc:
             return aggFunc(json_ret)
