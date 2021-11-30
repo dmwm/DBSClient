@@ -11,7 +11,6 @@ import socket
 import sys
 import urllib.request, urllib.parse, urllib.error
 
-<<<<<<< fix-json-err
 def headerHas(headers, content, mime):
     """
     Check mime content in HTTP headers which represented as multi line string.
@@ -24,7 +23,7 @@ def headerHas(headers, content, mime):
             if mime.lower() in hdr.lower():
                 return True
     return False
-=======
+
 def compress(body):
     """
     Compress data using gzip
@@ -38,7 +37,6 @@ def decompress(body):
     Decompress given data from gzip'ed format
     """
     return gzip.decompress(body).decode('utf-8')
->>>>>>> main
 
 def parseStream(results):
     """
@@ -393,11 +391,8 @@ class DbsApi(object):
         self.accept = accept
         self.aggregate = aggregate
         self.debug = debug
-<<<<<<< fix-json-err
         self.http_response = None
-=======
         self.gzip = useGzip
->>>>>>> main
 
         self.rest_api = RestApi(auth=X509Auth(ssl_cert=cert, ssl_key=key, ssl_verifypeer=verifypeer, ca_info=ca_info),
                                 proxy=Socks5Proxy(proxy_url=self.proxy) if self.proxy else None)
