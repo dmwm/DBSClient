@@ -1484,8 +1484,16 @@ class DBSClientReader_t(unittest.TestCase):
         """test107: unittestDBSClientReader_t.serverinfo: get server info"""
         reg_ex = r'^(3+\.[0-9]+\.[0-9]+[\.\-a-z0-9]*$)'
         version = self.api.serverinfo()
-        self.assertTrue('dbs_version' in version)
-        self.assertFalse(re.compile(reg_ex).match(version['dbs_version']) is None)
+        if isinstance(version, dict):
+            # python server
+            self.assertTrue('dbs_version' in version)
+            self.assertFalse(re.compile(reg_ex).match(version['dbs_version']) is None)
+        elif isinstance(version, list):
+            # go server
+            info = version[0]
+            reg_ex = r'^v\d\d\.\d\d\.\d\d'
+            self.assertTrue('dbs_version' in info)
+            self.assertFalse(re.compile(reg_ex).match(info['dbs_version']) is None)
 
     def test108(self):
         """test108 unittestDBSClientReader_t.listFileParentsByLumi: basic test using lumi section info"""

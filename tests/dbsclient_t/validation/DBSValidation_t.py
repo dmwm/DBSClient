@@ -6,6 +6,7 @@ These tests write and then immediately reads back the data from DBS3 and validat
 from random import choice
 import os
 import re
+import time
 import unittest
 import uuid
 import random
@@ -39,7 +40,16 @@ parent_stepchain_dataset="/%s_stepchain/%s/%s" % (primary_ds_name, procdataset_p
 
 flist = []
 
+def GoServer(api):
+    "Test if given DBS API talks to Go Server or not"
+    res = api.serverinfo()
+    if 'dbs2go' in str(res):
+        return True
+    return False
+
 def remove_non_comparable_keys(values, non_comparable_keys):
+    if not values:
+        return
     for value in values:
         if isinstance(value, dict):
             keys = set(value.keys())
@@ -392,6 +402,9 @@ class DBSValidation_t(unittest.TestCase):
                     if self.debug:
                         print("wrong data-type %s, we expect a list" % type(output))
                     if input:
+                        if self.debug:
+                            print("input ", input)
+                            print("output", output)
                         self.assertEqual(input, output)
                     if not output:
                         output = [] # if output is None/null we need it as list for operation below
@@ -417,18 +430,38 @@ class DBSValidation_t(unittest.TestCase):
         toMigrate = {'migration_url': self.source_url,
                      'migration_input': dataset_to_migrate}
         migration_request = self.migration_api.submitMigration(toMigrate)
+        if self.debug:
+            print("migration_request %s" % migration_request)
+        if isinstance(migration_request, list):
+            migration_request = migration_request[0]
         self.assertTrue('migration_request_id' in migration_request['migration_details'])
+        if not migration_request['migration_details']:
+            return
         migration_request_id = migration_request['migration_details']['migration_request_id']
+        if migration_request_id == 0 or migration_request_id == '0':
+            if self.debug:
+                print("there is no migration request to process")
+                print(migration_request)
+            return
         print("____toMigrate___")
         print(toMigrate)
         print("----------migration_request -----------")
         print(migration_request)
+        if GoServer(self.migration_api):
+            data = {'migration_rqst_id': migration_request_id}
+            status = self.migration_api.processMigration(data)
+            if self.debug:
+                print("process mig request", migration_request_id)
+                print("status of mig request", status)
         ###check migration status for max. 300s (should be enough time to migrate the dataset)
         with Timeout(300):
             while True:
                 request_status = self.migration_api.statusMigration(migration_rqst_id=migration_request_id)
-                if request_status[0]['migration_status'] == 2:
-                    break
+                if request_status:
+                    if isinstance(request_status, list) and len(request_status) > 0:
+                        if request_status[0]['migration_status'] == 2:
+                            break
+                time.sleep(1)
 
         ###validate dataset migration
         def check(input, output):
@@ -445,24 +478,32 @@ class DBSValidation_t(unittest.TestCase):
                                 del output[key][key2remove]
                             except KeyError:
                                 pass
+                    if key not in output:
+                        print("key %s not in %s" % (key, output))
                     self.assertTrue(key in output)
                     if key == "file_lumi_list":
-                        output[key].sort(key=lambda x: x.get('lumi_section_num'))
+                        if output[key]:
+                            output[key].sort(key=lambda x: x.get('lumi_section_num'))
                         value.sort(key=lambda x: x.get('lumi_section_num'))
                     elif key == "dataset_conf_list":
-                        output[key].sort(key=lambda x: x.get('output_module_label') + str(x.get('creation_date')))
+                        if output[key]:
+                            output[key].sort(key=lambda x: x.get('output_module_label') + str(x.get('creation_date')))
                         value.sort(key=lambda x: x.get('output_module_label') + str(x.get('creation_date')))
                     elif key == "file_parent_list":
-                        output[key].sort(key=lambda x: x.get('parent_logical_file_name') + x.get('this_logical_file_name'))
+                        if output[key]:
+                            output[key].sort(key=lambda x: x.get('parent_logical_file_name') + x.get('this_logical_file_name'))
                         value.sort(key=lambda x: x.get('parent_logical_file_name') + x.get('this_logical_file_name'))
                     elif key == "file_conf_list":
-                        output[key].sort(key=lambda x: x.get('lfn'))
+                        if output[key]:
+                            output[key].sort(key=lambda x: x.get('lfn'))
                         value.sort(key=lambda x: x.get('lfn'))
                     elif key == "files":
-                        output[key].sort(key=lambda x: x.get('logical_file_name'))
+                        if output[key]:
+                            output[key].sort(key=lambda x: x.get('logical_file_name'))
                         value.sort(key=lambda x: x.get('logical_file_name'))
                     elif key == "block_parent_list":
-                        output[key].sort(key=lambda x: x.get('parent_block_name'))
+                        if output[key]:
+                            output[key].sort(key=lambda x: x.get('parent_block_name'))
                         value.sort(key=lambda x: x.get('parent_block_name'))
 
                     check(value, output[key])
@@ -471,7 +512,8 @@ class DBSValidation_t(unittest.TestCase):
                                                    sorted(remove_non_comparable_keys(output, non_comparable_keys), key=lambda x: [x.keys() if isinstance(x, dict) else str(x)])):
                     check(element_in, element_out)
             else:
-                self.assertEqual(str(input), str(output))
+                if input and output:
+                    self.assertEqual(str(input), str(output))
 
         for block_name in (block['block_name'] for block in self.cmsweb_api.listBlocks(dataset=dataset_to_migrate)):
             block_dump_src = self.cmsweb_api.blockDump(block_name=block_name)
@@ -507,19 +549,29 @@ class DBSValidation_t(unittest.TestCase):
         toMigrate = {'migration_url': self.source_url,
                      'migration_input': block_to_migrate}
         migration_request = self.migration_api.submitMigration(toMigrate)
+        if self.debug:
+            print("migration_request %s" % migration_request)
+        if isinstance(migration_request, list):
+            migration_request = migration_request[0]
         self.assertTrue('migration_request_id' in migration_request['migration_details'])
+        if not migration_request['migration_details']:
+            return
         migration_request_id = migration_request['migration_details']['migration_request_id']
-        print("____toMigrate___")
-        print(toMigrate)
-        print("----------migration_request -----------")
-        print(migration_request) 
+        if self.debug:
+            print("____toMigrate___")
+            print(toMigrate)
+            print("----------migration_request -----------")
+            print(migration_request) 
 
         ###check migration status for max. 300s (should be enough time to migrate the dataset)
         with Timeout(300):
             while True:
                 request_status = self.migration_api.statusMigration(migration_rqst_id=migration_request_id)
-                if request_status[0]['migration_status'] == 2:
-                    break
+                if request_status:
+                    if isinstance(request_status, list) and len(request_status) > 0:
+                        if request_status[0]['migration_status'] == 2:
+                            break
+                time.sleep(1)
 
         ###validate block    migration
         def check(input, output):
@@ -536,24 +588,33 @@ class DBSValidation_t(unittest.TestCase):
                                 del output[key][key2remove]
                             except KeyError:
                                 pass
+                    if key not in output:
+                        if self.debug:
+                            print("key %s not in %s" % (key, output))
                     self.assertTrue(key in output)
                     if key == "file_lumi_list":
-                        output[key].sort(key=lambda x: x.get('lumi_section_num'))
+                        if output[key]:
+                            output[key].sort(key=lambda x: x.get('lumi_section_num'))
                         value.sort(key=lambda x: x.get('lumi_section_num'))
                     elif key == "dataset_conf_list":
-                        output[key].sort(key=lambda x: x.get('output_module_label') + str(x.get('creation_date')))
+                        if output[key]:
+                            output[key].sort(key=lambda x: x.get('output_module_label') + str(x.get('creation_date')))
                         value.sort(key=lambda x: x.get('output_module_label') + str(x.get('creation_date')))
                     elif key == "file_parent_list":
-                        output[key].sort(key=lambda x: x.get('parent_logical_file_name') + x.get('this_logical_file_name'))
+                        if output[key]:
+                            output[key].sort(key=lambda x: x.get('parent_logical_file_name') + x.get('this_logical_file_name'))
                         value.sort(key=lambda x: x.get('parent_logical_file_name') + x.get('this_logical_file_name'))
                     elif key == "file_conf_list":
-                        output[key].sort(key=lambda x: x.get('lfn'))
+                        if output[key]:
+                            output[key].sort(key=lambda x: x.get('lfn'))
                         value.sort(key=lambda x: x.get('lfn'))
                     elif key == "files":
-                        output[key].sort(key=lambda x: x.get('logical_file_name'))
+                        if output[key]:
+                            output[key].sort(key=lambda x: x.get('logical_file_name'))
                         value.sort(key=lambda x: x.get('logical_file_name'))
                     elif key == "block_parent_list":
-                        output[key].sort(key=lambda x: x.get('parent_block_name'))
+                        if output[key]:
+                            output[key].sort(key=lambda x: x.get('parent_block_name'))
                         value.sort(key=lambda x: x.get('parent_block_name'))
 
                     check(value, output[key])
@@ -564,7 +625,8 @@ class DBSValidation_t(unittest.TestCase):
                                                    sorted(remove_non_comparable_keys(output, non_comparable_keys), key=lambda x: [x.keys() if isinstance(x, dict) else str(x)])):
                     check(element_in, element_out)
             else:
-                self.assertEqual(str(input), str(output))
+                if input and output:
+                    self.assertEqual(str(input), str(output))
 
         block_dump_src = self.cmsweb_api.blockDump(block_name=block_to_migrate)
         block_dump_dest = self.api.blockDump(block_name=block_to_migrate)
@@ -602,8 +664,16 @@ class DBSValidation_t(unittest.TestCase):
         """test15: Test to get server information"""
         reg_ex = r'^(3+\.[0-9]+\.[0-9]+[\.\-a-z0-9]*$)'
         version = self.api.serverinfo()
-        self.assertTrue('dbs_version' in version)
-        self.assertFalse(re.compile(reg_ex).match(version['dbs_version']) is None)
+        if isinstance(version, dict):
+            # python server
+            self.assertTrue('dbs_version' in version)
+            self.assertFalse(re.compile(reg_ex).match(version['dbs_version']) is None)
+        elif isinstance(version, list):
+            # go server
+            info = version[0]
+            reg_ex = r'^v\d\d\.\d\d\.\d\d'
+            self.assertTrue('dbs_version' in info)
+            self.assertFalse(re.compile(reg_ex).match(info['dbs_version']) is None)
 
     def _selectRandomDatasetsWithParents(self, datasets):
         """helper function to select random dataset"""
