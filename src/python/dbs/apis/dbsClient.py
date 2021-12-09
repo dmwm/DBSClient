@@ -770,6 +770,12 @@ class DbsApi(object):
         return self.__callServer("fileparentsbylumi", data=kwargs, callmethod='POST', aggFunc=aggFileParentsByLumi)
 
 
+    def listApis(self):
+        """
+        API to retrieve list of APIs for DBS server
+        """
+        return self.__callServer("help")
+
     def listApiDocumentation(self):
         """
         API to retrieve the auto-generated documentation page from server
