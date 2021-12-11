@@ -380,10 +380,14 @@ class DbsApi(object):
            By default the DbsApi is trying to lookup the private key and the certificate in the common locations
 
         """
+        if isinstance(url, bytes):
+            url = url.decode("utf-8")
         if url.find(":", 6) == -1:
             self.url = url.replace(".cern.ch/dbs/", ".cern.ch:" + str(port) + "/dbs/", 1)
         else:
             self.url = url
+        # avoid double slash in the final URI
+        self.url = self.url.rstrip("/")
         self.proxy = proxy
         self.key = key
         self.cert = cert
