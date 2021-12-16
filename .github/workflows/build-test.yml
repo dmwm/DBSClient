@@ -1,0 +1,53 @@
+name: Build
+
+on:
+  push:
+    tags:
+      - '*.*.*.*'
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'
+        required: true
+        default: 'warning'
+      tags:
+        description: 'Test scenario tags'
+
+jobs:
+  build-n-publish:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+    
+    - name: Check out code/repo into the directory
+      uses: actions/checkout@v2
+
+    - name: Get the Ref
+      id: get-ref
+      uses: ankitvgupta/ref-to-tag-action@master
+      with:
+        ref: ${{ github.ref }}
+        head_ref: ${{ github.head_ref }}
+    
+    - name: Set up Python 3.x
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.x
+        
+    - name: Install pypa and depencies
+      run: |
+        python3 -m pip3 install --upgrade pip --user
+        python3 -m pip3 install --upgrade build --user
+        python3 -m pip3 install --upgrade twine --user
+        python3 -m pip3 install --upgrade wheel --user
+    
+    - name: Build a binary wheel and a source tarball
+      run: |
+        python3 setup.py sdist
+        python3 setup.py bdist_wheel
+        
+    - name: Publish to Test PyPI
+      uses: pypa/gh-action-pypi-publish@master
+      with:
+        password: ${{ secrets.TEST_PYPI_TOKEN }}
+        repository_url: https://test.pypi.org/legacy/
