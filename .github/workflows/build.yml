@@ -36,10 +36,10 @@ jobs:
         
     - name: Install pypa and depencies
       run: |
-        python3 -m pip3 install --upgrade pip --user
-        python3 -m pip3 install --upgrade build --user
-        python3 -m pip3 install --upgrade twine --user
-        python3 -m pip3 install --upgrade wheel --user
+        python3 -m pip install --upgrade pip --user
+        python3 -m pip install --upgrade build --user
+        python3 -m pip install --upgrade twine --user
+        python3 -m pip install --upgrade wheel --user
     
     - name: Build a binary wheel and a source tarball
       run: |
