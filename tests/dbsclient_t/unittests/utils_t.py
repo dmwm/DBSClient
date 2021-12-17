@@ -6,7 +6,7 @@ import os
 import sys
 import unittest
 
-from dbs.apis.dbsClient import compress, decompress
+from dbs.apis.dbsClient import compress, decompress, fixUrlPath
 
 class DBSClientUtils_t(unittest.TestCase):
 
@@ -24,6 +24,23 @@ class DBSClientUtils_t(unittest.TestCase):
         comp_data = compress(data)
         orig_data = bytes(decompress(comp_data), encoding='utf-8')
         self.assertTrue(data == orig_data)
+
+    def testfixUrlPath(self):
+        """test fixUrlPath function"""
+        url = "http://dbs.com/dbs/int/global/DBSReader"
+        res = fixUrlPath("http://dbs.com/dbs/int/global/DBSReader/")
+        self.assertTrue(res == url)
+        res = fixUrlPath("http://dbs.com////dbs/int/global/DBSReader/")
+        self.assertTrue(res == url)
+        res = fixUrlPath("http://dbs.com////dbs/int/////global////DBSReader/")
+        self.assertTrue(res == url)
+        try:
+            res = fixUrlPath("//dbs.com////dbs/int/////global////DBSReader/")
+        except Exception as e:
+            if 'wrong URL pattern' not in str(e):
+                self.fail("Wrong exception was raised.")
+            else:
+                pass
 
 if __name__ == "__main__":
     SUITE = unittest.TestLoader().loadTestsFromTestCase(DBSClientUtils_t)
