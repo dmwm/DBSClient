@@ -11,6 +11,14 @@ import socket
 import sys
 import urllib.request, urllib.parse, urllib.error
 
+def fixUrlPath(path):
+    """Fix url path"""
+    arr = path.split("://")
+    if len(arr) != 2:
+        raise Exception("wrong URL pattern %s" % path)
+    path = '/'.join([i for i in arr[1].split("/") if i])
+    return '{}://{}'.format(arr[0], path)
+
 def headerHas(headers, content, mime):
     """
     Check mime content in HTTP headers which represented as multi line string.
@@ -380,10 +388,13 @@ class DbsApi(object):
            By default the DbsApi is trying to lookup the private key and the certificate in the common locations
 
         """
+        if isinstance(url, bytes):
+            url = url.decode("utf-8")
         if url.find(":", 6) == -1:
             self.url = url.replace(".cern.ch/dbs/", ".cern.ch:" + str(port) + "/dbs/", 1)
         else:
             self.url = url
+        self.url = fixUrlPath(self.url)
         self.proxy = proxy
         self.key = key
         self.cert = cert
