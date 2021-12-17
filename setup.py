@@ -4,7 +4,7 @@ import sys
 from setuptools import setup
 
 # version of DBSClient in github
-package_version = "4.0.4"
+package_version = "test.4.0.5"
 
 # Requirements file for pip dependencies
 requirements = "requirements.txt"
@@ -32,7 +32,7 @@ setup(name="dbs3-client",
                 'dbs.exceptions'],
       package_dir={'': 'src/python'},
       install_requires=parse_requirements(requirements),
-      url="https://github.com/dmwm/DBSClient/tree/4.0.4",
+      url="https://github.com/dmwm/DBSClient/tree/test.4.0.5",
       # url="https://github.com/dmwm/DBSClient/tree/change2dbsDir",
       license="Apache License, Version 2.0",
       )
