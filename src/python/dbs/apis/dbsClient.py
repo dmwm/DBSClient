@@ -483,6 +483,7 @@ class DbsApi(object):
             raise http_error
         try:
             data = json.loads(data)
+            print("DBS Server error:", data)
             # re-raise with more detail
             if isinstance(data, dict) and 'exception' in data:
                 raise HTTPError(http_error.url, data['exception'], data['message'], http_error.header, http_error.body)
@@ -1263,7 +1264,7 @@ class DbsApi(object):
         checkInputParameter(method="listFileLumiArray", parameters=list(kwargs.keys()), validParameters=validParameters,
                             requiredParameters=requiredParameters)
 
-        return self.__callServer("filelumis", data=kwargs, callmethod="POST")
+        return self.__callServer("filelumis", data=kwargs, callmethod="POST", aggFunc=aggFileLumis)
 
     def listFileParents_doc(self, **kwargs):
         """
