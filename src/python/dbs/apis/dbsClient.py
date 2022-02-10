@@ -239,7 +239,7 @@ def aggParentDSTrio(results):
             return results
         pfid = row['pfid']
         rdict.setdefault(pfid, []).append([row['r'], row['l']])
-    return rdict
+    return [rdict]
 
 def slicedIterator(sourceList, sliceSize):
     """
