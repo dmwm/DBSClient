@@ -42,9 +42,12 @@ flist = []
 
 def GoServer(api):
     "Test if given DBS API talks to Go Server or not"
-    res = api.serverinfo()
-    if 'dbs2go' in str(res):
-        return True
+    try:
+        res = api.serverinfo()
+        if 'dbs2go' in str(res):
+            return True
+    except:
+        pass
     return False
 
 def remove_non_comparable_keys(values, non_comparable_keys):
@@ -65,13 +68,14 @@ class DBSValidation_t(unittest.TestCase):
             self.setUpClass()
         url = os.environ['DBS_WRITER_URL']
         proxy = os.environ.get('SOCKS5_PROXY')
-        self.debug = os.environ.get('DBS_DEBUG')
+        self.debug = os.environ.get('DBS_DEBUG', False)
         self.api = DbsApi(url=url, proxy=proxy, debug=self.debug)
         migration_url = os.environ['DBS_MIGRATE_URL']
         self.migration_api = DbsApi(url=migration_url, proxy=proxy, debug=self.debug)
         self.source_url='https://cmsweb.cern.ch:8443/dbs/prod/global/DBSReader'
         self.cmsweb_api = DbsApi(url=self.source_url, proxy=proxy, debug=self.debug)
-        self.cmswebtestbed_api = DbsApi(url='https://cmsweb-testbed.cern.ch/dbs/int/global/DBSReader', proxy=proxy)
+        readerUrl = os.environ.get('DBS_READER_URL', 'https://cmsweb-testbed.cern.ch/dbs/int/global/DBSReader')
+        self.cmswebtestbed_api = DbsApi(url=readerUrl, proxy=proxy)
 
     def setUp(self):
         """setup all necessary parameters"""
@@ -504,7 +508,7 @@ class DBSValidation_t(unittest.TestCase):
                     elif key == "block_parent_list":
                         if output[key]:
                             output[key].sort(key=lambda x: x.get('parent_block_name'))
-                        value.sort(key=lambda x: x.get('parent_block_name'))
+                        value.sort(key=lambda x: x.get('parent_block_name', ""))
 
                     check(value, output[key])
             elif isinstance(input, list):
