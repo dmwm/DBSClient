@@ -604,7 +604,11 @@ class DbsApi(object):
         """
         #We first check if the first lumi section has event_count or not
         frst = True
-        if (blockDump['files'][0]['file_lumi_list'][0]).get('event_count') == None: frst = False
+        if len(blockDump['files']) > 0:
+            fileLumiList = blockDump['files'][0]['file_lumi_list']
+            if len(fileLumiList) > 0:
+                if fileLumiList.get('event_count') == None:
+                    frst = False
         # when frst == True, we are looking for event_count == None in the data, if we did not find None (redFlg = False),
         # eveything is good. Otherwise, we have to remove all even_count in lumis and raise exception.
         # when frst == False, weare looking for event_count != None in the data, if we did not find Not None (redFlg = False),        # everything is good. Otherwise, we have to remove all even_count in lumis and raise exception.
