@@ -607,9 +607,9 @@ class DbsApi(object):
         if len(blockDump['files']) > 0:
             fileLumiList = blockDump['files'][0]['file_lumi_list']
             if len(fileLumiList) > 0:
-                if isinstance(fileLumisList, dict) and fileLumiList.get('event_count') == None:
+                if isinstance(fileLumiList, dict) and fileLumiList.get('event_count') == None:
                     frst = False
-                elif isinstance(fileLumisList, list):
+                elif isinstance(fileLumiList, list):
                     flDict = fileLumiList[0]
                     if isinstance(flDict, dict) and flDict.get('event_count') == None:
                         frst = False
