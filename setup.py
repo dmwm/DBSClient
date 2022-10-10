@@ -4,7 +4,7 @@ import sys
 from setuptools import setup
 
 # version of DBSClient in github
-package_version = "4.0.10"
+package_version = "4.0.11"
 
 # Requirements file for pip dependencies
 requirements = "requirements.txt"
