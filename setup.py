@@ -32,8 +32,10 @@ setup(name="dbs3-client",
                 'dbs.exceptions'],
       package_dir={'': 'src/python'},
       install_requires=parse_requirements(requirements),
-      url="https://github.com/dmwm/DBSClient/tree/0.0.6",
-      # url="https://github.com/dmwm/DBSClient/tree/change2dbsDir",
+      url="https://github.com/dmwm/DBSClient",
+      download_url="https://github.com/dmwm/DBSClient/tarball/%s" % package_version,
+      long_description="""# DBSClient\n\n* DBS client for CMS DBS system""",
+      long_description_content_type='text/markdown',
       license="Apache License, Version 2.0",
       )
 
