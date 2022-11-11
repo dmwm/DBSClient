@@ -503,6 +503,10 @@ class DbsApi(object):
             # re-raise with more detail
             if isinstance(data, dict) and 'exception' in data:
                 raise HTTPError(http_error.url, data['exception'], data['message'], http_error.header, http_error.body)
+            # DBS go server provides errors as list data-type
+            if isinstance(data, list) and len(data) == 1 and 'exception' in data[0]:
+                data = data[0]
+                raise HTTPError(http_error.url, data['exception'], data['message'], http_error.header, http_error.body)
         except:
             raise http_error
         raise http_error
