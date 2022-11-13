@@ -19,6 +19,19 @@ def fixUrlPath(path):
     path = '/'.join([i for i in arr[1].split("/") if i])
     return '{}://{}'.format(arr[0], path)
 
+def serverCode(data):
+    """
+    Extract server code from provided DBS error data
+    """
+    if isinstance(data, dict) and 'exception' in data:
+        dbsErr = data.get('error', {})
+        return dbsErr.get('code', 0)
+    if isinstance(data, list) and len(data) == 1 and 'exception' in data[0]:
+        data = data[0]
+        dbsErr = data.get('error', {})
+        return dbsErr.get('code', 0)
+    return 0
+
 def headerHas(headers, content, mime):
     """
     Check mime content in HTTP headers which represented as multi line string.
@@ -469,7 +482,7 @@ class DbsApi(object):
                         http_error.msg,
                         http_error.header,
                         http_error.body)
-                data = HTTPError(http_error.url, http_error.code, msg, http_error.header, http_error.body)
+                data = HTTPError(http_error.url, http_error.code, msg, http_error.header, http_error.body, serverCode(http_error))
                 self.__parseForException(data)
 
         if self.accept == "application/ndjson":
@@ -500,21 +513,15 @@ class DbsApi(object):
         try:
             data = json.loads(data)
             print("DBS Server error:", data)
-            # extract DBS Go server code
-            server_code = 0
             # re-raise with more detail
             if isinstance(data, dict) and 'exception' in data:
-                dbsErr = data.get('error', {})
-                server_code = dbsErr.get('code', 0)
-                raise HTTPError(http_error.url, data['exception'], data['message'], http_error.header, http_error.body, server_code)
+                raise HTTPError(http_error.url, data['exception'], data['message'], http_error.header, http_error.body, serverCode(data))
             # DBS go server provides errors as list data-type
             if isinstance(data, list) and len(data) == 1 and 'exception' in data[0]:
                 data = data[0]
-                dbsErr = data.get('error', {})
-                server_code = dbsErr.get('code', 0)
-                raise HTTPError(http_error.url, data['exception'], data['message'], http_error.header, http_error.body, server_code)
-        except:
-            raise http_error
+                raise HTTPError(http_error.url, data['exception'], data['message'], http_error.header, http_error.body, serverCode(data))
+        except Exception as exp:
+            raise exp
         raise http_error
 
     @property
