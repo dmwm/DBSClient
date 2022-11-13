@@ -502,15 +502,16 @@ class DbsApi(object):
             print("DBS Server error:", data)
             # extract DBS Go server code
             server_code = 0
-            if hasattr(data, "error"):
-                dbsErr = data['error']
-                server_code = getattr(dbsErr, 'code', 0)
             # re-raise with more detail
             if isinstance(data, dict) and 'exception' in data:
+                dbsErr = data.get('error', {})
+                server_code = dbsErr.get('code', 0)
                 raise HTTPError(http_error.url, data['exception'], data['message'], http_error.header, http_error.body, server_code)
             # DBS go server provides errors as list data-type
             if isinstance(data, list) and len(data) == 1 and 'exception' in data[0]:
                 data = data[0]
+                dbsErr = data.get('error', {})
+                server_code = dbsErr.get('code', 0)
                 raise HTTPError(http_error.url, data['exception'], data['message'], http_error.header, http_error.body, server_code)
         except:
             raise http_error
