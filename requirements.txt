@@ -1,1 +1,1 @@
-dbs3-pycurl==3.17.9
+dbs3-pycurl==3.18.0
