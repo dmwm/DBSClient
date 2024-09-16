@@ -34,9 +34,10 @@ jobs:
       with:
         python-version: 3.x
         
-    - name: Install pypa and depencies
+    - name: Install pyp and decencies
       run: |
         python3 -m pip install --upgrade pip --user
+        python3 -m pip install setuptools wheel --user
         python3 -m pip install --upgrade build --user
         python3 -m pip install --upgrade twine --user
         python3 -m pip install --upgrade wheel --user
