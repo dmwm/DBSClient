@@ -204,7 +204,7 @@ We can quickly check if library work using the python interpreter in the termina
 Then you can try to import dbsClient and RestClient (which is dbs3-pycurl):
 
 ```python
-from dbsClient.apis.dbsClient import *
+from dbs.apis.dbsClient import *
 from RestClient.RestApi import RestApi
 ```
 
@@ -216,7 +216,7 @@ You can run the following python script to ensure you can read:
 
 ```python
 # DBS-3 imports
-from dbsClient.apis.dbsClient import *
+from dbs.apis.dbsClient import *
 url="https://cmsweb-testbed.cern.ch/dbs/prod/global/DBSReader/"
 # API Object
 dbs3api = DbsApi(url=url)
